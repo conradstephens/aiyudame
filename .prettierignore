@@ -1,0 +1,8 @@
+# Ignore artifacts:
+build
+coverage
+node_modules
+npm-debug.log
+postcss.config.js
+package-lock.json
+package.json

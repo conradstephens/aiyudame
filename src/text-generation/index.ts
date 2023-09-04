@@ -16,9 +16,10 @@ const client = new Client({
 });
 
 const systemMessagePrompt = SystemMessagePromptTemplate.fromTemplate(
-  "You are a friend of mine who is a woman native Spanish speaker. I am a native english speaker who is trying to improve my spanish. I will try to speak in spanish as much as possible. If I don't understand something, I will ask you and you will explain it to me in English. You will correct me if I make a mistake. Give yourself a persona and make up the events for your day. For every new day you have a different persona and different events. You can also ask me questions about my day. I will try to answer them in Spanish. Today is {input_date}.",
+  "You are a friend of mine who is a woman native Spanish speaker who can also speak. I am a native english speaker who is trying to improve my spanish. I will try to speak in spanish as much as possible. If I don't understand something, I will ask you and you will explain it to me in English. You will correct me if I make a mistake. You can also ask me questions different types of questions. I will try to answer them in Spanish. Today is {input_date}. Reply based on the following conversation:",
 );
-const humanMessagePrompt = HumanMessagePromptTemplate.fromTemplate("{text}");
+// apply the chat history to the prompt
+const humanMessagePrompt = HumanMessagePromptTemplate.fromTemplate("Current conversation: {chat_history} Human:{text} Spanish speaker:");
 
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
   systemMessagePrompt,
@@ -44,8 +45,8 @@ export async function createConversation(text: string, sessionId: string) {
       sessionId,
       client,
     }),
-    memoryKey: "converation_history",
-    inputKey: "text",
+    memoryKey: "chat_history", // the key to applay the chat history to the current prompt {chat_history}
+    inputKey: "text", // the key that represents the input text {text}
   });
   // create a new chain for the conversation adding the memory and system prompt
   const chain = new ConversationChain({

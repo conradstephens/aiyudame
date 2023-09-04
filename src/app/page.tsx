@@ -64,7 +64,7 @@ export default function Home() {
 
   // This useEffect hook sets up the media recorder when the component mounts
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" || !sessionId) {
       let chunks: Blob[] = [];
       navigator.mediaDevices
         .getUserMedia({ audio: true })
@@ -141,7 +141,7 @@ export default function Home() {
           stopLoading();
         });
     }
-  }, []);
+  }, [sessionId]);
 
   // Function to start recording
   const startRecording = () => {

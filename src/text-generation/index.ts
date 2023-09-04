@@ -8,6 +8,10 @@ import {
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
 import { ConversationChain } from "langchain/chains";
+import dayjs from "dayjs"
+import 'dayjs/locale/es' // load on demand
+
+dayjs.locale('es') // use Spanish locale globally
 
 const client = new Client({
   host: process.env.PLANETSCALE_DB_HOST,
@@ -57,7 +61,7 @@ export async function createConversation(text: string, sessionId: string) {
   try {
     // talk to AI
     const { response } = await chain.call({
-      input_date: new Date().toLocaleDateString(),
+      input_date: dayjs(new Date()).format("MMMM D, YYYY, h:mm:ss a"),
       text,
     });
     return response as string;

@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "npx prettier . --write"
   },
   "dependencies": {
+    "@planetscale/database": "^1.11.0",
     "@radix-ui/react-dropdown-menu": "^2.0.5",
     "@radix-ui/react-slot": "^1.0.2",
     "@types/node": "20.5.9",
@@ -19,6 +21,7 @@
     "clsx": "^2.0.0",
     "eslint": "8.48.0",
     "eslint-config-next": "13.4.19",
+    "langchain": "^0.0.141",
     "lucide-react": "^0.274.0",
     "next": "13.4.19",
     "next-themes": "^0.2.1",

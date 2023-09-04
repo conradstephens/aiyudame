@@ -83,7 +83,6 @@ export default function Home() {
               console.error("Error playing audio:", err);
               stopLoading();
             };
-            audio.play();
             try {
               const reader = new FileReader();
               reader.readAsDataURL(audioBlob);

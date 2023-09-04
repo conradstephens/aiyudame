@@ -13,7 +13,6 @@ export default function Home() {
     null,
   );
   const [loading, setLoading] = useState(false);
-  console.log("loading", loading);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   const startLoading = () => {

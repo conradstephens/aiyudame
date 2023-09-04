@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
   // Extract the audio data from the request body
   const base64Audio = req.audio;
   const sessionId = req.sessionId;
+  console.log("sessionId", sessionId)
   // Convert the Base64 audio data back to a Buffer
   const audio = Buffer.from(base64Audio, "base64");
   try {

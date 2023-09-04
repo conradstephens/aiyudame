@@ -11,7 +11,7 @@ model conversation_history {
   id                Bytes   @id @default(dbgenerated("(uuid_to_bin(uuid()))")) @db.Binary(16)
   session_id        String? @db.VarChar(255)
   type              String? @db.VarChar(255)
-  content           String? @db.VarChar(510)
+  content           String? @db.VarChar(1020)
   role              String? @db.VarChar(255)
   name              String? @db.VarChar(255)
   additional_kwargs String? @db.VarChar(255)

@@ -36,7 +36,7 @@ const chat = new ChatOpenAI({
  * @returns string | null
  */
 export async function createConversation(text: string, sessionId: string) {
-  console.log("text", text)
+  console.log("text", text);
   // get the conversation history from the database
   const memory = new BufferMemory({
     chatHistory: new PlanetScaleChatMessageHistory({
@@ -48,7 +48,11 @@ export async function createConversation(text: string, sessionId: string) {
     inputKey: "text",
   });
   // create a new chain for the conversation adding the memory and system prompt
-  const chain = new ConversationChain({ llm: chat, memory, prompt: chatPrompt });
+  const chain = new ConversationChain({
+    llm: chat,
+    memory,
+    prompt: chatPrompt,
+  });
   try {
     // talk to AI
     const { response } = await chain.call({

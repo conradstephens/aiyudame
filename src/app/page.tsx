@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { base64StringToBlob } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { set, get } from "idb-keyval";
 
 export default function Home() {
   const [playingResponse, setPlayingResponse] = useState(false);
@@ -24,39 +25,41 @@ export default function Home() {
     setLoading(false);
   };
 
-  const createSessionId = () => {
+  const createSession = () => {
     const now = new Date();
     const id = now.getTime().toString();
-    localStorage.setItem(
-      "sessionId",
+    set(
+      "session",
       JSON.stringify({ sessionId: id, createdAt: now.toLocaleString() }),
-    );
-    setSessionId(id);
+    ).then(() => setSessionId(id));
   };
 
   useEffect(() => {
-    // get the conversation session id
-    const sessionId = localStorage.getItem("sessionId");
-    // if session id is not present, create a new session id
-    if (!sessionId) {
-      createSessionId();
-      return;
-    }
+    const retrieveSession = async () => {
+      // get the conversation session id
+      const session = await get("session");
+      // if session id is not present, create a new session id
+      if (!session) {
+        createSession();
+        return;
+      }
 
-    // if session id is present, check if it is expired, check if the session created time is a new day
-    const {
-      sessionId: id,
-      createdAt,
-    }: { sessionId: string; createdAt: string } = JSON.parse(sessionId);
-    const now = new Date();
-    const createdDate = new Date(createdAt);
-    const isSameDay = createdDate.getDate() === now.getDate();
-    if (!isSameDay) {
-      createSessionId();
-      return;
-    }
-    // if session id is present and not expired, use the session id
-    setSessionId(id);
+      // if session id is present, check if it is expired, check if the session created time is a new day
+      const {
+        sessionId: id,
+        createdAt,
+      }: { sessionId: string; createdAt: string } = JSON.parse(session);
+      const now = new Date();
+      const createdDate = new Date(createdAt);
+      const isSameDay = createdDate.getDate() === now.getDate();
+      if (!isSameDay) {
+        createSession();
+        return;
+      }
+      // if session id is present and not expired, use the session id
+      setSessionId(id);
+    };
+    retrieveSession();
   }, []);
 
   // This useEffect hook sets up the media recorder when the component mounts

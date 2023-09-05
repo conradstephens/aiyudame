@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const text = await convertAudioToText(audio);
     // Start a conversation with the AI
     const response = await createConversation(text, sessionId);
-
+    console.log("response", response)
     if (!response) return NextResponse.json({ response: "No response" });
 
     // generate audio

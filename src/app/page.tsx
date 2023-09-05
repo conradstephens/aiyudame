@@ -2,10 +2,10 @@
 
 import ThemeToggle from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { base64StringToBlob } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { set, get } from "idb-keyval";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Home() {
   const [playingResponse, setPlayingResponse] = useState(false);
@@ -15,6 +15,8 @@ export default function Home() {
   );
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+
+  const { toast } = useToast();
 
   const startLoading = () => {
     setLoading(true);
@@ -101,44 +103,130 @@ export default function Home() {
                   },
                   body: JSON.stringify({ audio: base64Audio, sessionId }),
                 });
+
                 const data = await response.json();
+
                 if (!response.ok) {
                   stopLoading();
-                  throw (
-                    data.error ||
-                    new Error(`Request failed with status ${response.status}`)
-                  );
+                  throw new Error("Error generating text");
                 }
-                const base64Blob = data.result;
-                if (base64Blob) {
-                  // Usage example
-                  const contentType = "audio/mpeg"; // Replace with the actual content type
-                  const blob = base64StringToBlob(base64Blob, contentType);
+                const text = data.openaiResponse;
 
-                  // get audio from blob and play audio through audio player
-                  const audio = new Audio(URL.createObjectURL(blob));
+                const audioElement = document.querySelector("audio");
+                if (window.MediaSource && audioElement) {
+                  const mediaSource = new MediaSource();
+                  audioElement.src = URL.createObjectURL(mediaSource);
+                  mediaSource.addEventListener("sourceopen", sourceOpen);
+                  mediaSource.addEventListener("sourceended", () =>
+                    stopLoading(),
+                  );
+                } else {
+                  console.log(
+                    "The Media Source Extensions API is not supported.",
+                  );
+                  throw new Error("Error generating audio");
+                }
 
-                  audio.addEventListener("playing", () => {
-                    setPlayingResponse(true);
-                  });
-                  audio.addEventListener("ended", () => {
+                async function sourceOpen(e: Event) {
+                  try {
+                    const mediaSource = e.target as MediaSource | null;
+                    if (!audioElement || !mediaSource) return;
+                    URL.revokeObjectURL(audioElement.src);
+                    const mime = `audio/mpeg`;
+
+                    const sourceBuffer = mediaSource.addSourceBuffer(mime);
+
+                    const voiceId = "N4Jse6hDfsD4Iqv16pxy";
+                    const elevenLabsRes = await fetch(
+                      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
+                      {
+                        method: "POST",
+                        headers: {
+                          accept: "audio/mpeg",
+                          "Content-Type": "application/json",
+                          "xi-api-key": process.env
+                            .NEXT_PUBLIC_ELEVENLABS_API_KEY as string,
+                        },
+                        body: JSON.stringify({
+                          text,
+                          model_id: "eleven_multilingual_v2",
+                        }),
+                      },
+                    );
+
+                    const elevenlabsBody = elevenLabsRes.body;
+
+                    if (!elevenLabsRes.ok || !elevenlabsBody) {
+                      const error = await elevenLabsRes.json();
+                      console.error("Error generating audio:", error);
+                      throw new Error("Error generating audio");
+                    }
+
+                    const arrayOfBuffers: any[] = [];
+                    const dataReader = elevenlabsBody.getReader();
+
+                    let done = false;
+                    while (!done) {
+                      const { done: doneStreaming, value } =
+                        await dataReader.read(); // read stream data
+                      done = doneStreaming;
+
+                      if (done) {
+                        // if done, begin appending the data
+                        sourceBuffer.appendBuffer(arrayOfBuffers.shift());
+                        setPlayingResponse(true);
+                        break;
+                      }
+                      // append the data to the buffer
+                      if (value) {
+                        arrayOfBuffers.push(value.buffer);
+                      }
+                    }
+
+                    sourceBuffer.addEventListener("updateend", function (e) {
+                      if (
+                        // make sure the source buffer is not updating and the media source is open
+                        !sourceBuffer.updating &&
+                        mediaSource?.readyState === "open"
+                      ) {
+                        if (arrayOfBuffers.length) {
+                          // if there is more data to append, append it
+                          sourceBuffer.appendBuffer(arrayOfBuffers.shift());
+                        } else {
+                          // if there is no more data to append, end the stream and play the audio
+                          mediaSource.endOfStream();
+                          audioElement.play();
+                        }
+                      }
+                    });
+                  } catch (error: any) {
+                    console.error(error);
                     stopLoading();
-                  });
-
-                  audio.play();
+                    toast({
+                      description: error.message,
+                      variant: "destructive",
+                    });
+                  }
                 }
               };
             } catch (error: any) {
               console.error(error);
               stopLoading();
-              alert(error.message);
+              toast({
+                description: error.message,
+                variant: "destructive",
+              });
             }
           };
           setMediaRecorder(newMediaRecorder);
         })
-        .catch((err) => {
-          console.error("Error accessing microphone:", err);
+        .catch((error: any) => {
+          console.error(error);
           stopLoading();
+          toast({
+            description: error.message,
+            variant: "destructive",
+          });
         });
     }
   }, [sessionId]);
@@ -181,6 +269,7 @@ export default function Home() {
             )}
             {playingResponse && "Playing response..."}
           </Button>
+          <audio />
         </div>
       </div>
     </div>

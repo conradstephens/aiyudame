@@ -10,7 +10,7 @@ const openai = new OpenAI();
  * @returns string
  */
 export async function convertAudioToText(
-  audioData: string | NodeJS.ArrayBufferView,
+  audioData: Buffer,
 ) {
   //  Write the audio data to a file
   const inputPath = "/tmp/input.webm";

@@ -8,10 +8,10 @@ import {
   HumanMessagePromptTemplate,
 } from "langchain/prompts";
 import { ConversationChain } from "langchain/chains";
-import dayjs from "dayjs"
-import 'dayjs/locale/es' // load on demand
+import dayjs from "dayjs";
+import "dayjs/locale/es"; // load on demand
 
-dayjs.locale('es') // use Spanish locale globally
+dayjs.locale("es"); // use Spanish locale globally
 
 // initialize the database client
 const client = new Client({
@@ -24,7 +24,9 @@ const systemMessagePrompt = SystemMessagePromptTemplate.fromTemplate(
   "Act as a human friend of mine who is a woman native Spanish speaker who can also speak English. Similar to a human being, you have many likes and dislikes. It is up to you to decide what those are. I am a native english speaker who is trying to improve my spanish. You and I are having a casual conversation, asking each other different types of questions, conversating about various topics. If I don't understand something, I will ask you and you will explain it to me. You will correct me if I make a mistake. Today is {input_date}. Reply based on the following conversation:",
 );
 // apply the chat history to the prompt
-const humanMessagePrompt = HumanMessagePromptTemplate.fromTemplate("Current conversation: {chat_history} Human:{text}");
+const humanMessagePrompt = HumanMessagePromptTemplate.fromTemplate(
+  "Current conversation: {chat_history} Human:{text}",
+);
 
 const chatPrompt = ChatPromptTemplate.fromPromptMessages([
   systemMessagePrompt,

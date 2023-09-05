@@ -23,50 +23,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ openaiResponse: response });
 
-    // // generate audio
-    // const voiceId = "N4Jse6hDfsD4Iqv16pxy";
-    // const elevenLabsRes = await fetch(
-    //   `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-    //   {
-    //     method: "POST",
-    //     headers: {
-    //       accept: "audio/mpeg",
-    //       "Content-Type": "application/json",
-    //       "xi-api-key": process.env.ELEVENLABS_API_KEY as string,
-    //     },
-    //     body: JSON.stringify({
-    //       text: response,
-    //       model_id: "eleven_multilingual_v2",
-    //     }),
-    //   },
-    // );
-
-    // if (!elevenLabsRes.ok) {
-    //   const error = await elevenLabsRes.json();
-    //   console.error("Error generating audio", error);
-    //   return NextResponse.json({ response });
-    // }
-    // // convert audio to base64
-    // const blob = await elevenLabsRes.blob();
-    // // const base64Blob = await blobToBase64String(blob);
-
-    // // const encoder = new TextEncoder();
-    // const stream = blob.stream();
-    // // // Create a readable stream from the audio data
-    // // const customReadable = new ReadableStream({
-    // //   start(controller) {
-    // //     controller.enqueue(encoder.encode(base64Blob));
-    // //     controller.close();
-    // //   },
-    // // });
-
-    // //  Return the the AI audio data
-    //  return new Response(stream, {
-    //   headers: { "Content-Type": "audio/mpeg" },
-    // });
-
-    // Return the the AI audio data
-    // return NextResponse.json({ result: base64Blob }, { status: 200 });
   } catch (error: any) {
     // Handle any errors that occur during the request
     if (error.response) {

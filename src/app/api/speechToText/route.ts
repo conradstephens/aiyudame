@@ -16,13 +16,16 @@ export async function POST(request: NextRequest) {
     // Convert the audio data to text
     const text = await convertAudioToText(audio);
     // Start a conversation with the AI
-    console.log("human:", text)
+    console.log("human:", text);
     const response = await createConversation(text, sessionId);
     console.log("ai:", response);
-    if (!response) return NextResponse.json({ error: "Error creating conversation" }, { status: 500 });
+    if (!response)
+      return NextResponse.json(
+        { error: "Error creating conversation" },
+        { status: 500 },
+      );
 
     return NextResponse.json({ openaiResponse: response });
-
   } catch (error: any) {
     // Handle any errors that occur during the request
     if (error.response) {

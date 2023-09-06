@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/deleteHistory?isCron=true",
-      "schedule": "* * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }

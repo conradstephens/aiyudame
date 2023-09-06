@@ -8,6 +8,7 @@ import { set, get } from "idb-keyval";
 import { useToast } from "@/components/ui/use-toast";
 import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
+import { ToastAction } from "@/components/ui/toast";
 
 export default function Home() {
   const [playingResponse, setPlayingResponse] = useState(false);
@@ -243,7 +244,7 @@ export default function Home() {
           console.error(error);
           stopLoading();
           toast({
-            description: error.message,
+            description: "Please allow microphone access to continue",
             variant: "destructive",
           });
         });

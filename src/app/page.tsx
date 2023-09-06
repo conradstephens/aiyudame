@@ -70,11 +70,6 @@ export default function Home() {
       setSessionId(id);
     };
     retrieveSession();
-
-    const language = localStorage.getItem("language");
-    if (language) {
-      methods.setValue("language", language);
-    }
   }, []);
 
   // This useEffect hook sets up the media recorder when the component mounts
@@ -153,8 +148,14 @@ export default function Home() {
                     const mime = `audio/mpeg`;
 
                     const sourceBuffer = mediaSource.addSourceBuffer(mime);
-                    const voiceId = "7arsGG6R4puBzDqYy6xu";
-                    // const voiceId = "N4Jse6hDfsD4Iqv16pxy";
+
+                    let modelId = "eleven_multilingual_v2";
+                    let voiceId = "N4Jse6hDfsD4Iqv16pxy";
+
+                    if (language === "en") {
+                      modelId = "eleven_monolingual_v1";
+                      voiceId = "7arsGG6R4puBzDqYy6xu";
+                    }
                     const elevenLabsRes = await fetch(
                       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
                       {
@@ -167,7 +168,7 @@ export default function Home() {
                         },
                         body: JSON.stringify({
                           text,
-                          model_id: "eleven_multilingual_v2",
+                          model_id: modelId,
                         }),
                       },
                     );

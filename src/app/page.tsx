@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { set, get } from "idb-keyval";
 import { useToast } from "@/components/ui/use-toast";
+import { FormProvider, useForm } from "react-hook-form";
+import LanguageSelect from "@/components/language-select";
 
 export default function Home() {
   const [playingResponse, setPlayingResponse] = useState(false);
@@ -15,6 +17,12 @@ export default function Home() {
   );
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+
+  const methods = useForm({
+    defaultValues: {
+      language: "en",
+    },
+  });
 
   const { toast } = useToast();
 
@@ -62,6 +70,11 @@ export default function Home() {
       setSessionId(id);
     };
     retrieveSession();
+
+    const language = localStorage.getItem("language");
+    if (language) {
+      methods.setValue("language", language);
+    }
   }, []);
 
   // This useEffect hook sets up the media recorder when the component mounts
@@ -95,13 +108,18 @@ export default function Home() {
                   stopLoading();
                   throw new Error("Unexpected result type");
                 }
+                const language = methods.getValues("language");
                 const base64Audio = reader.result.split(",")[1]; // Remove the data URL prefix
                 const response = await fetch("/api/speechToText", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
                   },
-                  body: JSON.stringify({ audio: base64Audio, sessionId }),
+                  body: JSON.stringify({
+                    audio: base64Audio,
+                    sessionId,
+                    language,
+                  }),
                 });
 
                 const data = await response.json();
@@ -135,8 +153,8 @@ export default function Home() {
                     const mime = `audio/mpeg`;
 
                     const sourceBuffer = mediaSource.addSourceBuffer(mime);
-
-                    const voiceId = "N4Jse6hDfsD4Iqv16pxy";
+                    const voiceId = "7arsGG6R4puBzDqYy6xu";
+                    // const voiceId = "N4Jse6hDfsD4Iqv16pxy";
                     const elevenLabsRes = await fetch(
                       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
                       {
@@ -251,6 +269,9 @@ export default function Home() {
     <div className="flex justify-center h-screen">
       <div className="flex flex-col gap-5 p-5 sm:max-w-4xl w-full">
         <div className="flex justify-between">
+          <FormProvider {...methods}>
+            <LanguageSelect />
+          </FormProvider>
           <ThemeToggle />
         </div>
         <div className="w-full flex justify-center items-center h-full">

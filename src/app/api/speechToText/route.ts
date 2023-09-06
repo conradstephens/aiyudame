@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   const base64Audio = req.audio;
   const sessionId = req.sessionId;
   const language = req.language;
-  
+
   console.log("sessionId", sessionId);
   // Convert the Base64 audio data back to a Buffer
   const audio = Buffer.from(base64Audio, "base64");
@@ -19,13 +19,14 @@ export async function POST(request: NextRequest) {
     const text = await convertAudioToText(audio, language);
     // Start a conversation with the AI
     console.log("human:", text);
-    const response = await createConversation(text, sessionId);
+    const response = await createConversation(text, sessionId, language);
     console.log("ai:", response);
-    if (!response)
+    if (!response) {
       return NextResponse.json(
         { error: "Error creating conversation" },
         { status: 500 },
       );
+    }
 
     return NextResponse.json({ openaiResponse: response });
   } catch (error: any) {

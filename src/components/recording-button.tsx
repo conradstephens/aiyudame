@@ -253,7 +253,7 @@ export default function RecordingButton(props: ComponentProps) {
         </LazyMotion>
       )}
       <div className="text-2xl w-full relative">
-        <div className="absolute top-2/4 left-2/4 translate-x-[-50%] translate-y-[-50%] cyle">
+        <div className="absolute top-2/4 left-2/4 translate-x-[-50%] translate-y-[-50%] w-full">
           {recording
             ? "Recording... Press the button again to stop recording"
             : playingResponse

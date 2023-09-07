@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { createConversation } from "@/text-generation";
 import { convertAudioToText } from "@/speech-to-text";
 
+// Text that gets transcripted when there is nobody speaking in the audio
+const badText = [
+  "Subtítulos realizados por la comunidad de Amara.org", // spanish transcription
+  "you" // english transcription
+];
+
 // This function handles POST requests to the /api/speechToText route
 export async function POST(request: NextRequest) {
   // Parse the request body
@@ -19,6 +25,15 @@ export async function POST(request: NextRequest) {
     const text = await convertAudioToText(audio, language);
     // Start a conversation with the AI
     console.log("human:", text);
+
+    // If the audio is empty, return an error
+    if (badText.some((bad) => text === bad)) {
+      return NextResponse.json(
+        { error: "No audio detected. Try again" },
+        { status: 500 },
+      );
+    }
+
     const response = await createConversation(text, sessionId, language);
     console.log("ai:", response);
     if (!response) {

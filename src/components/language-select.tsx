@@ -8,6 +8,7 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { set } from "idb-keyval";
 import { useFormContext } from "react-hook-form";
 
 export default function LanguageSelect() {
@@ -21,7 +22,14 @@ export default function LanguageSelect() {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select
+                value={field.value}
+                onValueChange={(value: string) => {
+                  field.onChange(value);
+                  // Persist the value to IndexedDB
+                  set("settings", { language: value });
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

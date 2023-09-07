@@ -8,7 +8,7 @@ import { set, get } from "idb-keyval";
 import { useToast } from "@/components/ui/use-toast";
 import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
-import { ToastAction } from "@/components/ui/toast";
+import { nanoid } from "nanoid";
 
 export default function Home() {
   const [playingResponse, setPlayingResponse] = useState(false);
@@ -21,7 +21,7 @@ export default function Home() {
 
   const methods = useForm({
     defaultValues: {
-      language: "en",
+      language: "es",
     },
   });
 
@@ -36,13 +36,14 @@ export default function Home() {
     setLoading(false);
   };
 
-  const createSession = () => {
-    const now = new Date();
-    const id = now.getTime().toString();
-    set(
-      "session",
-      JSON.stringify({ sessionId: id, createdAt: now.toLocaleString() }),
-    ).then(() => setSessionId(id));
+  const createSession = async () => {
+    const id = nanoid();
+
+    await set("session", {
+      sessionId: id,
+      createdAt: new Date().toLocaleString(),
+    });
+    setSessionId(id);
   };
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function Home() {
       const session = await get("session");
       // if session id is not present, create a new session id
       if (!session) {
-        createSession();
+        await createSession();
         return;
       }
 
@@ -59,18 +60,26 @@ export default function Home() {
       const {
         sessionId: id,
         createdAt,
-      }: { sessionId: string; createdAt: string } = JSON.parse(session);
+      }: { sessionId: string; createdAt: string } = session;
       const now = new Date();
       const createdDate = new Date(createdAt);
       const isSameDay = createdDate.getDate() === now.getDate();
       if (!isSameDay) {
-        createSession();
+        await createSession();
         return;
       }
       // if session id is present and not expired, use the session id
       setSessionId(id);
     };
     retrieveSession();
+  }, []);
+
+  useEffect(() => {
+    get("settings")
+      .then((settings?: { language: string }) => {
+        methods.setValue("language", settings?.language ?? "es");
+      })
+      .catch(console.error);
   }, []);
 
   // This useEffect hook sets up the media recorder when the component mounts

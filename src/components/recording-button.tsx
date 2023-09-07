@@ -228,20 +228,18 @@ export default function RecordingButton(props: ComponentProps) {
   return (
     <div className="w-full flex flex-col gap-10 text-center justify-center items-center h-full">
       {playingResponse || loading ? (
-        <div>
-          <Loader2 className="h-20 w-20 animate-spin" />
-        </div>
+        <Loader2 className="h-14 w-14 animate-spin" />
       ) : (
         <LazyMotion features={domAnimation}>
           <m.button
             disabled={loading || playingResponse}
             onClick={recording ? stopRecording : startRecording}
-            className={clsx("bg-red-500 border-2 border-red-500 h-20 w-20")}
+            className={clsx("bg-red-500 border-2 border-red-500 h-14 w-14")}
             initial={{ scale: 1, borderRadius: "100%" }}
             transition={{
               scale: {
                 repeat: recording ? Infinity : 0,
-                duration: recording ? 2 : 0.5,
+                duration: recording ? 2 : 0.1,
                 delay: 0.1,
               },
               borderRadius: { duration: 0.3 },

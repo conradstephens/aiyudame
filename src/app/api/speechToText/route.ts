@@ -3,9 +3,11 @@ import { createConversation } from "@/text-generation";
 import { convertAudioToText } from "@/speech-to-text";
 
 // Text that gets transcribed when there is nobody speaking in the audio
+// help reduce hallucination
 const badText = [
   "Subtítulos realizados por la comunidad de Amara.org", // spanish transcription
-  "you" // english transcription
+  "you", // english transcription
+  ""
 ];
 
 // This function handles POST requests to the /api/speechToText route

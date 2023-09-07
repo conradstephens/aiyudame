@@ -41,6 +41,7 @@ ELEVENLABS_VOICE_ID=your_elevenlabs_voice_id
 PLANETSCALE_DB_HOST=your_planetscale_hostname
 PLANETSCALE_DB_USERNAME=your_planetscale_username
 PLANETSCALE_DB_PASSWORD=your_planetscale_password
+CRON_SECRET=your_random_generated_secret
 # see https://elevenlabs.io/voice-lab about generating a voice id
 ```
 
@@ -92,10 +93,11 @@ yarn dev
 
 ## Environment Variables 🔑
 
-- **OPENAI_API_KEY:** Follow this [guide](https://platform.openai.com/docs/api-reference/authentication) to obtain your openai api key.
+- **OPENAI:** Follow this [guide](https://platform.openai.com/docs/api-reference/authentication) to obtain your openai api key.
 - **ELEVENLABS_API_KEY:** Follow this [guide](https://docs.elevenlabs.io/api-reference/quick-start/authentication) to obtain your elevenlabs api key.
 - **ELEVENLABS_VOICE_ID:** Query this [endpoint](https://docs.elevenlabs.io/api-reference/voices) to obtain the specific voice id you want.
 - **PLANETSCALE:** Follow this [guide](https://planetscale.com/docs/concepts/connection-strings) to obtain your planetscale keys.
+- **CRON_SECRET:** Generate a secret to authenticate requests to your cron job api route.
 
 ## Deployment 😎
 

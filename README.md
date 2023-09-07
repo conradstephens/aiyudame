@@ -1,6 +1,6 @@
 # AIyudame 🗣️
 
-**AIyudame** is a Next.js application that utilizes AI chatbot technology to help people improve their Spanish-speaking skills. Whether you're looking to practice conversational Spanish or learn new phrases, AIyudame is here to assist you. This README provides an overview of the project and instructions for setup and development.
+**AIyudame** is a Next.js application that utilizes AI chatbot technology to help people improve their Spanish-speaking skills. Whether you're looking to practice conversational Spanish or learn new phrases, AIyudame is here to assist you. This README provides an overview of the project and instructions for setup and development. Users can switch the language to English for just a regular chat bot.
 
 ## Technologies Used 💻
 

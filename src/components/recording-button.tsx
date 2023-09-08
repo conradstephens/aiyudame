@@ -5,6 +5,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { LazyMotion, domAnimation, m } from "framer-motion";
 import clsx from "clsx";
 import { Loader2 } from "lucide-react";
+import { useSetAtom } from "jotai";
+import { aiTextResponseAtom } from "@/atoms";
 
 interface ComponentProps {
   sessionId: string | null;
@@ -21,6 +23,8 @@ export default function RecordingButton(props: ComponentProps) {
   const [loading, setLoading] = useState(false);
 
   const { toast } = useToast();
+
+  const setAitTextResponse = useSetAtom(aiTextResponseAtom);
 
   const startLoading = () => {
     setLoading(true);
@@ -82,11 +86,13 @@ export default function RecordingButton(props: ComponentProps) {
                 }
                 const text = data.openaiResponse;
 
+                setAitTextResponse(text);
+
                 const audioElement = document.querySelector("audio");
                 if (window.MediaSource && audioElement) {
                   const mediaSource = new MediaSource();
                   audioElement.src = URL.createObjectURL(mediaSource);
-                  mediaSource.addEventListener("sourceopen", sourceOpen);
+                  mediaSource.addEventListener("sourceopen", () => {});
                   mediaSource.addEventListener("sourceended", () =>
                     stopLoading(),
                   );
@@ -226,7 +232,7 @@ export default function RecordingButton(props: ComponentProps) {
   };
 
   return (
-    <div className="w-full flex flex-col gap-10 text-center justify-center items-center h-full">
+    <div className="w-full flex flex-col gap-10 text-center justify-center items-center">
       {playingResponse || loading ? (
         <Loader2 className="h-14 w-14 animate-spin" />
       ) : (
@@ -250,7 +256,7 @@ export default function RecordingButton(props: ComponentProps) {
           />
         </LazyMotion>
       )}
-      <div className="text-2xl w-full relative">
+      <div className="text-md w-full relative">
         <div className="absolute top-2/4 left-2/4 translate-x-[-50%] translate-y-[-50%] w-full">
           {recording
             ? "Recording... Press the button again to stop recording"

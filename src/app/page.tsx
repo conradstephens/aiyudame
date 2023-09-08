@@ -7,9 +7,12 @@ import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
 import { nanoid } from "nanoid";
 import RecordingButton from "@/components/recording-button";
+import { useAtomValue } from "jotai";
+import { aiTextResponseAtom } from "@/atoms";
 
 export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [text] = useAtomValue(aiTextResponseAtom);
 
   const methods = useForm({
     defaultValues: {
@@ -58,6 +61,16 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const text =
+      "Donde esta la biblioteca? Un momento por favor. El pollo loco.";
+
+    // Split the text into an array of spanish words
+    const words = text.split(" ");
+    // prompt: What does "{word}/{text}" mean in spanish? Make sure to begin the definition with "Definition:". Don't give an explanation
+    console.log("words", words);
+  }, []);
+
+  useEffect(() => {
     get("settings")
       .then((settings?: { language: string }) => {
         methods.setValue("language", settings?.language ?? "es");
@@ -74,7 +87,10 @@ export default function Home() {
           </FormProvider>
           <ThemeToggle />
         </div>
-        <RecordingButton sessionId={sessionId} language={language} />
+        <div className="w-full flex flex-col text-center justify-center items-center h-full gap-20">
+          <div className="text-2xl">{text}</div>
+          <RecordingButton sessionId={sessionId} language={language} />
+        </div>
       </div>
     </div>
   );

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "Whenever you are requested to explain what a word means, make sure to begin the explanation with 'Explanation:'. Don't give examples. If context is provided, start with 'In the context of ...'."
+          content: "Whenever you are requested to explain what a word means, make sure to begin the explanation with 'Explanation:'. Don't give examples. If context is provided, start with 'In this context...', but don't repeat the context."
         },
         {
           role: "user",

@@ -5,6 +5,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { LazyMotion, domAnimation, m } from "framer-motion";
 import clsx from "clsx";
 import { Loader2 } from "lucide-react";
+import { useSetAtom } from "jotai";
+import { aiTextResponseAtom } from "@/atoms";
 
 interface ComponentProps {
   sessionId: string | null;
@@ -21,6 +23,8 @@ export default function RecordingButton(props: ComponentProps) {
   const [loading, setLoading] = useState(false);
 
   const { toast } = useToast();
+
+  const setAitTextResponse = useSetAtom(aiTextResponseAtom);
 
   const startLoading = () => {
     setLoading(true);
@@ -80,7 +84,7 @@ export default function RecordingButton(props: ComponentProps) {
                   stopLoading();
                   throw new Error(data.error);
                 }
-                const text = data.openaiResponse;
+                const text: string = data.openaiResponse;
 
                 const audioElement = document.querySelector("audio");
                 if (window.MediaSource && audioElement) {
@@ -106,12 +110,12 @@ export default function RecordingButton(props: ComponentProps) {
 
                     const sourceBuffer = mediaSource.addSourceBuffer(mime);
 
-                    let modelId = "eleven_multilingual_v2";
-                    let voiceId = "N4Jse6hDfsD4Iqv16pxy";
+                    let modelId = "eleven_monolingual_v1";
+                    let voiceId = "7arsGG6R4puBzDqYy6xu";
 
-                    if (language === "en") {
-                      modelId = "eleven_monolingual_v1";
-                      voiceId = "7arsGG6R4puBzDqYy6xu";
+                    if (language === "es") {
+                      modelId = "eleven_multilingual_v2";
+                      voiceId = "N4Jse6hDfsD4Iqv16pxy";
                     }
                     const elevenLabsRes = await fetch(
                       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
@@ -171,6 +175,11 @@ export default function RecordingButton(props: ComponentProps) {
                         } else {
                           // if there is no more data to append, end the stream and play the audio
                           mediaSource.endOfStream();
+
+                          // set text
+                          const words = text.split(" ");
+
+                          setAitTextResponse({ text, words });
                           audioElement.play();
                         }
                       }
@@ -226,7 +235,7 @@ export default function RecordingButton(props: ComponentProps) {
   };
 
   return (
-    <div className="w-full flex flex-col gap-10 text-center justify-center items-center h-full">
+    <div className="w-full flex flex-col gap-10 text-center justify-center items-center">
       {playingResponse || loading ? (
         <Loader2 className="h-14 w-14 animate-spin" />
       ) : (
@@ -250,7 +259,7 @@ export default function RecordingButton(props: ComponentProps) {
           />
         </LazyMotion>
       )}
-      <div className="text-2xl w-full relative">
+      <div className="text-md w-full relative">
         <div className="absolute top-2/4 left-2/4 translate-x-[-50%] translate-y-[-50%] w-full">
           {recording
             ? "Recording... Press the button again to stop recording"

@@ -1,15 +1,19 @@
 "use client";
 
 import ThemeToggle from "@/components/theme-toggle";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { set, get } from "idb-keyval";
 import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
 import { nanoid } from "nanoid";
 import RecordingButton from "@/components/recording-button";
+import { useAtom, useAtomValue } from "jotai";
+import { aiTextResponseAtom, sessionIdAtom } from "@/atoms";
+import ExplanationPopover from "@/components/explanation-popover";
 
 export default function Home() {
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useAtom(sessionIdAtom);
+  const { text, words } = useAtomValue(aiTextResponseAtom);
 
   const methods = useForm({
     defaultValues: {
@@ -74,7 +78,15 @@ export default function Home() {
           </FormProvider>
           <ThemeToggle />
         </div>
-        <RecordingButton sessionId={sessionId} language={language} />
+        <div className="w-full flex flex-col text-center justify-center items-center h-full gap-20">
+          <div className="w-full max-h-[50%] overflow-y-auto">
+            {language === "es" &&
+              words.map((word, index) => (
+                <ExplanationPopover key={index} label={word} context={text} />
+              ))}
+          </div>
+          <RecordingButton sessionId={sessionId} language={language} />
+        </div>
       </div>
     </div>
   );

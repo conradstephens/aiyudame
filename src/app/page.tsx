@@ -9,7 +9,7 @@ import { nanoid } from "nanoid";
 import RecordingButton from "@/components/recording-button";
 import { useAtom, useAtomValue } from "jotai";
 import { aiTextResponseAtom, sessionIdAtom } from "@/atoms";
-import ExplanationPopover from "@/components/explanation-popover";
+import AiResponseWord from "@/components/ai-response-word";
 
 export default function Home() {
   const [sessionId, setSessionId] = useAtom(sessionIdAtom);
@@ -82,7 +82,7 @@ export default function Home() {
           <div className="w-full max-h-[50%] overflow-y-auto">
             {language === "es" &&
               words.map((word, index) => (
-                <ExplanationPopover key={index} label={word} context={text} />
+                <AiResponseWord key={index} word={word} context={text} />
               ))}
           </div>
           <RecordingButton sessionId={sessionId} language={language} />

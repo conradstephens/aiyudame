@@ -8,15 +8,17 @@ import {
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { useToast } from "./ui/use-toast";
 
 interface ComponentProps {
-  label: string;
+  word: string;
   context: string;
 }
 
-export default function ExplanationPopover(props: ComponentProps) {
-  const { label, context } = props;
+export default function AiResponseWord(props: ComponentProps) {
+  const { word, context } = props;
   const [explanation, setExplanation] = useState("");
+  const { toast } = useToast();
 
   const hasExplanation = !!explanation.length;
 
@@ -28,7 +30,7 @@ export default function ExplanationPopover(props: ComponentProps) {
       }
       const response = await fetch("api/explainWord", {
         method: "POST",
-        body: JSON.stringify({ word: label, context }),
+        body: JSON.stringify({ word, context }),
       });
 
       if (!response.ok) {
@@ -58,6 +60,10 @@ export default function ExplanationPopover(props: ComponentProps) {
       }
     } catch (error: any) {
       console.error(error);
+      toast({
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -67,7 +73,7 @@ export default function ExplanationPopover(props: ComponentProps) {
         className="text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50 p-1 text-2xl"
         onClick={getExplanation}
       >
-        {label}
+        {word}
       </PopoverTrigger>
       <PopoverContent>
         {hasExplanation ? (

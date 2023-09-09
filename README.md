@@ -12,6 +12,7 @@
 - **[Planetscale](https://planetscale.com):** A cloud-native database platform designed to help organizations manage and scale their databases easily and efficiently.
 - **[Prisma](https://www.prisma.io/):** A Node.js and TypeScript ORM.
 - **[Langchain](https://langchain.com):** A framework for developing applications powered by language models.
+- **[Jotai](https://jotai.org/):** Primitive and flexible state management for React.
 
 ## Getting Started 🚀
 

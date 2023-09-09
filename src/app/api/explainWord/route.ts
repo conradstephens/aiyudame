@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error(`Error with OpenAI API request: ${error.message}`);
     return NextResponse.json(
-      { error: "An error occurred during your request." },
+      { error: "Error generating explanation." },
       { status: 500 },
     );
   }

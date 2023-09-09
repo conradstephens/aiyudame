@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { OpenAI } from "openai";
+import { StreamingTextResponse, OpenAIStream } from "ai";
 
 const openai = new OpenAI();
 
@@ -7,35 +8,42 @@ const openai = new OpenAI();
 export async function POST(request: NextRequest) {
   // Parse the request body
   const req = await request.json();
-  
+
   const word = req.word;
   const context = req.context;
 
   try {
-    const response = await openai.chat.completions.create({
+    const explanation = await openai.chat.completions.create({
       model: "gpt-3.5-turbo-16k",
       temperature: 0.7,
       messages: [
         {
           role: "system",
-          content: "Whenever you are requested to explain what a word means, make sure to begin the explanation with 'Explanation:'. Don't give examples. If context is provided, start with 'In this context...', but don't repeat the context."
+          content:
+            "Whenever you are requested to explain what a word means, make sure to begin the explanation with 'Explanation:'. Don't give examples. If context is provided, start with 'In this context...', but don't repeat the context.",
         },
         {
           role: "user",
-          content: `What does '${word}' mean in spanish in the context of '${context}' ?`
-        }
-      ]
+          content: `What does '${word}' mean in spanish in the context of '${context}' ?`,
+        },
+      ],
+      stream: true,
     });
 
-    const explanation = response.choices[0].message.content;
+    if (!explanation) {
+      throw new Error("Error generating explanation.");
+    }
 
-    return NextResponse.json({ explanation });
+    // Convert the response into a friendly text-stream
+    const stream = OpenAIStream(explanation);
+
+    // Respond with the stream
+    return new StreamingTextResponse(stream);
   } catch (error: any) {
-      console.error(`Error with OpenAI API request: ${error.message}`);
-      return NextResponse.json(
-        { error: "An error occurred during your request." },
-        { status: 500 },
-      );
-    
+    console.error(`Error with OpenAI API request: ${error.message}`);
+    return NextResponse.json(
+      { error: "An error occurred during your request." },
+      { status: 500 },
+    );
   }
 }

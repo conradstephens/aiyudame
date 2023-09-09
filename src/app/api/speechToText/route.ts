@@ -7,7 +7,7 @@ import { convertAudioToText } from "@/speech-to-text";
 const badText = [
   "Subtítulos realizados por la comunidad de Amara.org", // spanish transcription
   "you", // english transcription
-  ""
+  "",
 ];
 
 // This function handles POST requests to the /api/speechToText route
@@ -36,7 +36,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await createConversation(transcribedText, sessionId, language);
+    const response = await createConversation(
+      transcribedText,
+      sessionId,
+      language,
+    );
     console.log("ai:", response);
     if (!response) {
       return NextResponse.json(

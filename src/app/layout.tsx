@@ -1,10 +1,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/toaster";
-import { JotaiProvider } from "@/components/jotai-provider";
+import { JotaiProvider } from "@/providers/jotai-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 

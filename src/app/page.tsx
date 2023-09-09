@@ -79,10 +79,11 @@ export default function Home() {
           <ThemeToggle />
         </div>
         <div className="w-full flex flex-col text-center justify-center items-center h-full gap-20">
-          <div className="w-full">
-            {words.map((word, index) => (
-              <ExplanationPopover key={index} label={word} context={text} />
-            ))}
+          <div className="w-full max-h-[50%] overflow-y-auto">
+            {language === "es" &&
+              words.map((word, index) => (
+                <ExplanationPopover key={index} label={word} context={text} />
+              ))}
           </div>
           <RecordingButton sessionId={sessionId} language={language} />
         </div>

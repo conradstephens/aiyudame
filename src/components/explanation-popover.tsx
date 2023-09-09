@@ -5,7 +5,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 
@@ -16,12 +16,13 @@ interface ComponentProps {
 
 export default function ExplanationPopover(props: ComponentProps) {
   const { label, context } = props;
+  const [explanation, setExplanation] = useState("");
 
-  const [explanation, setExplanation] = useState<string | null>(null);
+  const hasExplanation = !!explanation.length;
 
   const getExplanation = async () => {
     try {
-      // if explanation is already present, do not fetch again
+      // if explanation is already present, do not fetch
       if (explanation) {
         return;
       }
@@ -29,13 +30,32 @@ export default function ExplanationPopover(props: ComponentProps) {
         method: "POST",
         body: JSON.stringify({ word: label, context }),
       });
-      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error);
+        const res = await response.json();
+        throw new Error(res.error);
       }
 
-      setExplanation(data.explanation);
+      const data = response.body;
+
+      if (!data) {
+        throw new Error("Error generating explanation");
+      }
+
+      const reader = data.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      while (!done) {
+        const { done: doneStreaming, value } = await reader.read(); // read stream data
+        done = doneStreaming;
+
+        if (done) {
+          break;
+        }
+        const chunkValue = decoder.decode(value);
+
+        setExplanation((prev) => prev + chunkValue);
+      }
     } catch (error: any) {
       console.error(error);
     }
@@ -43,17 +63,16 @@ export default function ExplanationPopover(props: ComponentProps) {
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="link"
-          className="p-1 text-2xl"
-          onClick={getExplanation}
-        >
-          {label}
-        </Button>
+      <PopoverTrigger
+        className="text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50 p-1 text-2xl"
+        onClick={getExplanation}
+      >
+        {label}
       </PopoverTrigger>
       <PopoverContent>
-        {explanation?.replace("Explanation: ", "") ?? (
+        {hasExplanation ? (
+          explanation?.replace("Explanation: ", "")
+        ) : (
           <div className="flex flex-col gap-2">
             <Skeleton className="w-full h-4" />
             <Skeleton className="w-full h-4" />

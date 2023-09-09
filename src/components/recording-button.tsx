@@ -110,12 +110,12 @@ export default function RecordingButton(props: ComponentProps) {
 
                     const sourceBuffer = mediaSource.addSourceBuffer(mime);
 
-                    let modelId = "eleven_multilingual_v2";
-                    let voiceId = "N4Jse6hDfsD4Iqv16pxy";
+                    let modelId = "eleven_monolingual_v1";
+                    let voiceId = "7arsGG6R4puBzDqYy6xu";
 
-                    if (language === "en") {
-                      modelId = "eleven_monolingual_v1";
-                      voiceId = "7arsGG6R4puBzDqYy6xu";
+                    if (language === "es") {
+                      modelId = "eleven_multilingual_v2";
+                      voiceId = "N4Jse6hDfsD4Iqv16pxy";
                     }
                     const elevenLabsRes = await fetch(
                       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,

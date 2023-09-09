@@ -84,15 +84,13 @@ export default function RecordingButton(props: ComponentProps) {
                   stopLoading();
                   throw new Error(data.error);
                 }
-                const text = data.openaiResponse;
-
-                setAitTextResponse(text);
+                const text: string = data.openaiResponse;
 
                 const audioElement = document.querySelector("audio");
                 if (window.MediaSource && audioElement) {
                   const mediaSource = new MediaSource();
                   audioElement.src = URL.createObjectURL(mediaSource);
-                  mediaSource.addEventListener("sourceopen", () => {});
+                  mediaSource.addEventListener("sourceopen", sourceOpen);
                   mediaSource.addEventListener("sourceended", () =>
                     stopLoading(),
                   );
@@ -177,6 +175,11 @@ export default function RecordingButton(props: ComponentProps) {
                         } else {
                           // if there is no more data to append, end the stream and play the audio
                           mediaSource.endOfStream();
+
+                          // set text
+                          const words = text.split(" ");
+
+                          setAitTextResponse({ text, words });
                           audioElement.play();
                         }
                       }

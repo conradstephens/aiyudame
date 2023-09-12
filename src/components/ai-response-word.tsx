@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/popover";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "./ui/use-toast";
 
 interface ComponentProps {
@@ -66,6 +66,11 @@ export default function AiResponseWord(props: ComponentProps) {
       });
     }
   };
+
+  // reset explanation when context changes
+  useEffect(() => {
+    setExplanation("");
+  }, [context]);
 
   return (
     <Popover>

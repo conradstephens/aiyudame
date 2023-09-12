@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { Loader2 } from "lucide-react";
 import { useSetAtom } from "jotai";
 import { aiTextResponseAtom } from "@/atoms";
+import { set } from "idb-keyval";
 
 interface ComponentProps {
   sessionId: string | null;
@@ -163,27 +164,32 @@ export default function RecordingButton(props: ComponentProps) {
                       }
                     }
 
-                    sourceBuffer.addEventListener("updateend", function () {
-                      if (
-                        // make sure the source buffer is not updating and the media source is open
-                        !sourceBuffer.updating &&
-                        mediaSource?.readyState === "open"
-                      ) {
-                        if (arrayOfBuffers.length) {
-                          // if there is more data to append, append it
-                          sourceBuffer.appendBuffer(arrayOfBuffers.shift());
-                        } else {
-                          // if there is no more data to append, end the stream and play the audio
-                          mediaSource.endOfStream();
+                    sourceBuffer.addEventListener(
+                      "updateend",
+                      async function () {
+                        if (
+                          // make sure the source buffer is not updating and the media source is open
+                          !sourceBuffer.updating &&
+                          mediaSource?.readyState === "open"
+                        ) {
+                          if (arrayOfBuffers.length) {
+                            // if there is more data to append, append it
+                            sourceBuffer.appendBuffer(arrayOfBuffers.shift());
+                          } else {
+                            // if there is no more data to append, end the stream and play the audio
+                            mediaSource.endOfStream();
+                            // store thr response in local storage
+                            await set("previousResponse", text);
+                            // set text
+                            const words = text.split(" ");
 
-                          // set text
-                          const words = text.split(" ");
+                            setAitTextResponse({ text, words });
 
-                          setAitTextResponse({ text, words });
-                          audioElement.play();
+                            audioElement.play();
+                          }
                         }
-                      }
-                    });
+                      },
+                    );
                   } catch (error: any) {
                     console.error(error);
                     stopLoading();

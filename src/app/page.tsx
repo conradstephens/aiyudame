@@ -7,13 +7,13 @@ import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
 import { nanoid } from "nanoid";
 import RecordingButton from "@/components/recording-button";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { aiTextResponseAtom, sessionIdAtom } from "@/atoms";
 import AiResponseWord from "@/components/ai-response-word";
 
 export default function Home() {
   const [sessionId, setSessionId] = useAtom(sessionIdAtom);
-  const { text, words } = useAtomValue(aiTextResponseAtom);
+  const [{ text, words }, setResponse] = useAtom(aiTextResponseAtom);
 
   const methods = useForm({
     defaultValues: {
@@ -35,6 +35,19 @@ export default function Home() {
 
   useEffect(() => {
     const retrieveSession = async () => {
+      // get the settings
+      const settings = await get("settings");
+      if (settings) {
+        methods.setValue("language", settings.language);
+      }
+      // restore the last thing the ai said
+      const previousResponse = await get("previousResponse");
+      if (previousResponse) {
+        setResponse({
+          text: previousResponse,
+          words: previousResponse.split(" "),
+        });
+      }
       // get the conversation session id
       const session = await get("session");
       // if session id is not present, create a new session id
@@ -59,14 +72,6 @@ export default function Home() {
       setSessionId(id);
     };
     retrieveSession();
-  }, []);
-
-  useEffect(() => {
-    get("settings")
-      .then((settings?: { language: string }) => {
-        methods.setValue("language", settings?.language ?? "es");
-      })
-      .catch(console.error);
   }, []);
 
   return (

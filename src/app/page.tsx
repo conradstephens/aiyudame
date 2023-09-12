@@ -2,7 +2,7 @@
 
 import ThemeToggle from "@/components/theme-toggle";
 import { useEffect } from "react";
-import { set, get } from "idb-keyval";
+import { set, get, del } from "idb-keyval";
 import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
 import { nanoid } from "nanoid";
@@ -31,6 +31,8 @@ export default function Home() {
       createdAt: new Date().toLocaleString(),
     });
     setSessionId(id);
+    // clear the previous response
+    await del("previousResponse");
   };
 
   useEffect(() => {
@@ -39,14 +41,6 @@ export default function Home() {
       const settings = await get("settings");
       if (settings) {
         methods.setValue("language", settings.language);
-      }
-      // restore the last thing the ai said
-      const previousResponse = await get("previousResponse");
-      if (previousResponse) {
-        setResponse({
-          text: previousResponse,
-          words: previousResponse.split(" "),
-        });
       }
       // get the conversation session id
       const session = await get("session");
@@ -70,6 +64,14 @@ export default function Home() {
       }
       // if session id is present and not expired, use the session id
       setSessionId(id);
+      // restore the last thing the ai said
+      const previousResponse = await get("previousResponse");
+      if (previousResponse) {
+        setResponse({
+          text: previousResponse,
+          words: previousResponse.split(" "),
+        });
+      }
     };
     retrieveSession();
   }, []);

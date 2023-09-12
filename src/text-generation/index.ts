@@ -6,6 +6,7 @@ import {
   ChatPromptTemplate,
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
+  MessagesPlaceholder,
 } from "langchain/prompts";
 import { ConversationChain } from "langchain/chains";
 import dayjs from "dayjs";
@@ -41,7 +42,7 @@ export async function createConversation(
 
   if (language === "es") {
     systemPrompt =
-      "Act as a woman native Spanish speaker who can also speak English. Similar to a human being, you have many likes and dislikes. It is up to you to decide what those are. I am a native english speaker who is trying to improve my spanish. You and I are having a casual conversation, asking each other different types of questions, conversating about various topics. If I don't understand something, I will ask you and you will explain it to me. You will correct me if I make a mistake. Today is {input_date}. Reply based on the following conversation: {chat_history}";
+      "Act as a woman native Spanish speaker who can also speak English. Similar to a human being, you have many likes and dislikes. It is up to you to decide what those are. I am a native english speaker who is trying to improve my spanish. You and I are having a casual conversation, asking each other different types of questions, conversating about various topics. If I don't understand something, I will ask you and you will explain it to me. You will correct me if I make a mistake. Today is {input_date}.";
   }
 
   const systemMessagePrompt =
@@ -51,8 +52,10 @@ export async function createConversation(
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
     systemMessagePrompt,
+    new MessagesPlaceholder("chat_history"), // the chat history will be applied here
     humanMessagePrompt,
   ]);
+  
   // get the conversation history from the database
   const memory = new BufferMemory({
     chatHistory: new PlanetScaleChatMessageHistory({
@@ -60,21 +63,26 @@ export async function createConversation(
       sessionId,
       client,
     }),
-    memoryKey: "chat_history", // the key to applay the chat history to the current prompt {chat_history}
+    memoryKey: "chat_history", // the key to apply the chat history to the current prompt
     inputKey: "text", // the key that represents the input text {text}
+    returnMessages: true, // return the messages from the database
   });
+
   // create a new chain for the conversation adding the memory and system prompt
   const chain = new ConversationChain({
     llm: chat,
     memory,
     prompt: chatPrompt,
+    verbose: process.env.NODE_ENV === "development",
   });
+
   try {
     // talk to AI
     const { response } = await chain.call({
       input_date: dayjs(new Date()).format("MMMM D, YYYY, h:mm:ss a"),
       text,
     });
+
     return response as string;
   } catch (e) {
     console.error(e);

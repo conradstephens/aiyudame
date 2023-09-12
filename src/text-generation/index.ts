@@ -36,8 +36,6 @@ export async function createConversation(
   sessionId: string,
   language: string,
 ) {
-  console.log("text", text);
-
   let systemPrompt = "";
 
   if (language === "es") {

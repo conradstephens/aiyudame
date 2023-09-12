@@ -7,12 +7,12 @@ import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
 import { nanoid } from "nanoid";
 import RecordingButton from "@/components/recording-button";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { aiTextResponseAtom, sessionIdAtom } from "@/atoms";
 import AiResponseWord from "@/components/ai-response-word";
 
 export default function Home() {
-  const [sessionId, setSessionId] = useAtom(sessionIdAtom);
+  const setSessionId = useSetAtom(sessionIdAtom);
   const [{ text, words }, setResponse] = useAtom(aiTextResponseAtom);
 
   const methods = useForm({
@@ -92,7 +92,7 @@ export default function Home() {
                 <AiResponseWord key={index} word={word} context={text} />
               ))}
           </div>
-          <RecordingButton sessionId={sessionId} language={language} />
+          <RecordingButton language={language} />
         </div>
       </div>
     </div>

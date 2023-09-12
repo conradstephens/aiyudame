@@ -5,17 +5,17 @@ import { useToast } from "@/components/ui/use-toast";
 import { LazyMotion, domAnimation, m } from "framer-motion";
 import clsx from "clsx";
 import { Loader2 } from "lucide-react";
-import { useSetAtom } from "jotai";
-import { aiTextResponseAtom } from "@/atoms";
+import { useAtomValue, useSetAtom } from "jotai";
+import { aiTextResponseAtom, sessionIdAtom } from "@/atoms";
 import { set } from "idb-keyval";
 
 interface ComponentProps {
-  sessionId: string | null;
   language: string;
 }
 
 export default function RecordingButton(props: ComponentProps) {
-  const { sessionId, language } = props;
+  const { language } = props;
+  const sessionId = useAtomValue(sessionIdAtom);
   const [playingResponse, setPlayingResponse] = useState(false);
   const [recording, setRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
@@ -25,7 +25,7 @@ export default function RecordingButton(props: ComponentProps) {
 
   const { toast } = useToast();
 
-  const setAitTextResponse = useSetAtom(aiTextResponseAtom);
+  const setAiTextResponse = useSetAtom(aiTextResponseAtom);
 
   const startLoading = () => {
     setLoading(true);
@@ -183,7 +183,7 @@ export default function RecordingButton(props: ComponentProps) {
                             // set text
                             const words = text.split(" ");
 
-                            setAitTextResponse({ text, words });
+                            setAiTextResponse({ text, words });
 
                             audioElement.play();
                           }

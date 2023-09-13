@@ -67,6 +67,7 @@ export default function RecordingButton(props: ComponentProps) {
                   stopLoading();
                   throw new Error("Unexpected result type");
                 }
+                // transcribe audio and begin conversation with openai
                 const base64Audio = reader.result.split(",")[1]; // Remove the data URL prefix
                 const response = await fetch("/api/speechToText", {
                   method: "POST",
@@ -87,118 +88,65 @@ export default function RecordingButton(props: ComponentProps) {
                 }
                 const text: string = data.openaiResponse;
 
-                const audioElement = document.querySelector("audio");
-                if (window.MediaSource && audioElement) {
-                  const mediaSource = new MediaSource();
-                  audioElement.src = URL.createObjectURL(mediaSource);
-                  mediaSource.addEventListener("sourceopen", sourceOpen);
-                  mediaSource.addEventListener("sourceended", () =>
-                    stopLoading(),
-                  );
-                } else {
-                  console.log(
-                    "The Media Source Extensions API is not supported.",
-                  );
+                const audioContext = new AudioContext();
+                const audioElement = new Audio();
+                audioElement.controls = true;
+
+                URL.revokeObjectURL(audioElement.src);
+
+                let modelId = "eleven_monolingual_v1";
+                let voiceId = "7arsGG6R4puBzDqYy6xu";
+
+                if (language === "es") {
+                  modelId = "eleven_multilingual_v2";
+                  voiceId = "N4Jse6hDfsD4Iqv16pxy";
+                }
+                // generate audio from openai response
+                const elevenLabsRes = await fetch(
+                  `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
+                  {
+                    method: "POST",
+                    headers: {
+                      accept: "audio/mpeg",
+                      "Content-Type": "application/json",
+                      "xi-api-key": process.env
+                        .NEXT_PUBLIC_ELEVENLABS_API_KEY as string,
+                    },
+                    body: JSON.stringify({
+                      text,
+                      model_id: modelId,
+                    }),
+                  },
+                );
+
+                const elevenlabsBody = elevenLabsRes.body;
+
+                if (!elevenLabsRes.ok || !elevenlabsBody) {
+                  const error = await elevenLabsRes.json();
+                  console.error("Error generating audio:", error);
                   throw new Error("Error generating audio");
                 }
 
-                async function sourceOpen(e: Event) {
-                  try {
-                    const mediaSource = e.target as MediaSource | null;
-                    if (!audioElement || !mediaSource) return;
-                    URL.revokeObjectURL(audioElement.src);
-                    const mime = `audio/mpeg`;
+                // stream the response
+                const audioBuffer = await new Response(
+                  elevenlabsBody,
+                ).arrayBuffer();
 
-                    const sourceBuffer = mediaSource.addSourceBuffer(mime);
+                const audioSource = audioContext.createBufferSource();
 
-                    let modelId = "eleven_monolingual_v1";
-                    let voiceId = "7arsGG6R4puBzDqYy6xu";
+                audioContext.decodeAudioData(audioBuffer, async (buffer) => {
+                  audioSource.buffer = buffer;
+                  audioSource.connect(audioContext.destination);
+                  //  store the response in local storage
+                  await set("previousResponse", text);
+                  // set text
+                  const words = text.split(" ");
 
-                    if (language === "es") {
-                      modelId = "eleven_multilingual_v2";
-                      voiceId = "N4Jse6hDfsD4Iqv16pxy";
-                    }
-                    const elevenLabsRes = await fetch(
-                      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
-                      {
-                        method: "POST",
-                        headers: {
-                          accept: "audio/mpeg",
-                          "Content-Type": "application/json",
-                          "xi-api-key": process.env
-                            .NEXT_PUBLIC_ELEVENLABS_API_KEY as string,
-                        },
-                        body: JSON.stringify({
-                          text,
-                          model_id: modelId,
-                        }),
-                      },
-                    );
-
-                    const elevenlabsBody = elevenLabsRes.body;
-
-                    if (!elevenLabsRes.ok || !elevenlabsBody) {
-                      const error = await elevenLabsRes.json();
-                      console.error("Error generating audio:", error);
-                      throw new Error("Error generating audio");
-                    }
-
-                    const arrayOfBuffers: any[] = [];
-                    const dataReader = elevenlabsBody.getReader();
-
-                    let done = false;
-                    while (!done) {
-                      const { done: doneStreaming, value } =
-                        await dataReader.read(); // read stream data
-                      done = doneStreaming;
-
-                      if (done) {
-                        // if done, begin appending the data
-                        sourceBuffer.appendBuffer(arrayOfBuffers.shift());
-                        setPlayingResponse(true);
-                        break;
-                      }
-                      // append the data to the buffer
-                      if (value) {
-                        arrayOfBuffers.push(value.buffer);
-                      }
-                    }
-
-                    sourceBuffer.addEventListener(
-                      "updateend",
-                      async function () {
-                        if (
-                          // make sure the source buffer is not updating and the media source is open
-                          !sourceBuffer.updating &&
-                          mediaSource?.readyState === "open"
-                        ) {
-                          if (arrayOfBuffers.length) {
-                            // if there is more data to append, append it
-                            sourceBuffer.appendBuffer(arrayOfBuffers.shift());
-                          } else {
-                            // if there is no more data to append, end the stream and play the audio
-                            mediaSource.endOfStream();
-                            // store thr response in local storage
-                            await set("previousResponse", text);
-                            // set text
-                            const words = text.split(" ");
-
-                            setAiTextResponse({ text, words });
-
-                            audioElement.play();
-                          }
-                        }
-                      },
-                    );
-                  } catch (error: any) {
-                    console.error(error);
-                    stopLoading();
-                    toast({
-                      description: error.message,
-                      variant: "destructive",
-                    });
-                  }
-                }
+                  setAiTextResponse({ text, words });
+                  audioSource.onended = () => stopLoading();
+                  audioSource.start();
+                  setPlayingResponse(true);
+                });
               } catch (error: any) {
                 console.error(error);
                 stopLoading();
@@ -276,7 +224,6 @@ export default function RecordingButton(props: ComponentProps) {
             : "Click the button to start recording"}
         </div>
       </div>
-      <audio />
     </div>
   );
 }

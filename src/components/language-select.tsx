@@ -20,7 +20,7 @@ export default function LanguageSelect() {
         control={methods.control}
         name="language"
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="language-select">
             <FormControl>
               <Select
                 value={field.value}

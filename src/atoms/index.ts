@@ -5,3 +5,6 @@ export const aiTextResponseAtom = atom<{ text: string; words: string[] }>({
   words: [],
 });
 export const sessionIdAtom = atom<string | null>(null);
+export const showJoyRideAtom = atom<boolean>(false);
+export const showAiResponseJoyRideAtom = atom<boolean>(false);
+export const isReturningUserAtom = atom<boolean>(false);

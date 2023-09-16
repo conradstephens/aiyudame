@@ -53,7 +53,7 @@ export async function createConversation(
     new MessagesPlaceholder("chat_history"), // the chat history will be applied here
     humanMessagePrompt,
   ]);
-  
+
   // get the conversation history from the database
   const memory = new BufferMemory({
     chatHistory: new PlanetScaleChatMessageHistory({

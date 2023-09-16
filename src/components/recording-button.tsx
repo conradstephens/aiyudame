@@ -6,7 +6,7 @@ import { LazyMotion, domAnimation, m } from "framer-motion";
 import clsx from "clsx";
 import { Loader2 } from "lucide-react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { aiTextResponseAtom, sessionIdAtom } from "@/atoms";
+import { aiTextResponseAtom, sessionIdAtom, showJoyRideAtom } from "@/atoms";
 import { set } from "idb-keyval";
 
 interface ComponentProps {
@@ -16,6 +16,7 @@ interface ComponentProps {
 export default function RecordingButton(props: ComponentProps) {
   const { language } = props;
   const sessionId = useAtomValue(sessionIdAtom);
+  const showJoyride = useAtomValue(showJoyRideAtom);
   const [playingResponse, setPlayingResponse] = useState(false);
   const [recording, setRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
@@ -38,7 +39,8 @@ export default function RecordingButton(props: ComponentProps) {
 
   // This useEffect hook sets up the media recorder when the component mounts
   useEffect(() => {
-    if (typeof window !== "undefined" || !sessionId) {
+    if (typeof window !== "undefined" && sessionId && !showJoyride) {
+      console.log("setting up media recorder");
       let chunks: Blob[] = [];
       navigator.mediaDevices
         .getUserMedia({ audio: true })
@@ -168,7 +170,7 @@ export default function RecordingButton(props: ComponentProps) {
           });
         });
     }
-  }, [sessionId]);
+  }, [sessionId, showJoyride]);
 
   // Function to start recording
   const startRecording = () => {
@@ -197,26 +199,19 @@ export default function RecordingButton(props: ComponentProps) {
           <m.button
             disabled={loading || playingResponse}
             onClick={recording ? stopRecording : startRecording}
-            className={clsx("bg-red-500 border-2 border-red-500 h-14 w-14")}
-            initial={{ scale: 1, borderRadius: "100%" }}
-            transition={{
-              scale: {
-                repeat: recording ? Infinity : 0,
-                duration: recording ? 2 : 0.1,
-                delay: 0.1,
-              },
-              borderRadius: { duration: 0.3 },
-            }}
-            animate={
-              recording ? { scale: [null, 1.2, 1], borderRadius: "30%" } : {}
-            }
+            className={clsx(
+              "bg-red-500 border-2 border-red-500 h-12 w-12",
+              "recording-button",
+            )}
+            initial={{ borderRadius: "100%" }}
+            animate={recording ? { borderRadius: "20%" } : {}}
           />
         </LazyMotion>
       )}
       <div className="text-md w-full relative">
         <div className="absolute top-2/4 left-2/4 translate-x-[-50%] translate-y-[-50%] w-full">
           {recording
-            ? "Recording... Press the button again to stop recording"
+            ? "Recording in progress... Press the button again to stop recording"
             : playingResponse
             ? "Playing response..."
             : loading

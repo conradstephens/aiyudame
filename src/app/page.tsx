@@ -2,7 +2,7 @@
 
 import ThemeToggle from "@/components/theme-toggle";
 import { useEffect } from "react";
-import { set, get, del, getMany, setMany } from "idb-keyval";
+import { set, del, getMany, setMany } from "idb-keyval";
 import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
 import { nanoid } from "nanoid";
@@ -111,6 +111,7 @@ export default function Home() {
       ["isReturningUser", true],
       ["hasFinishedAiResponseJoyride", true],
     ]);
+    setIsReturningUser(true);
     setShowJoyride(false);
     setShowAiResponseJoyRide(false);
   };

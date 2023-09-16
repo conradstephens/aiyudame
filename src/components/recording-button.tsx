@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { LazyMotion, domAnimation, m } from "framer-motion";
+import { LazyMotion, ResolvedValues, domAnimation, m } from "framer-motion";
 import clsx from "clsx";
 import { Loader2 } from "lucide-react";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -18,7 +18,12 @@ export default function RecordingButton(props: ComponentProps) {
   const sessionId = useAtomValue(sessionIdAtom);
   const showJoyride = useAtomValue(showJoyRideAtom);
   const [playingResponse, setPlayingResponse] = useState(false);
-  const [recording, setRecording] = useState(false);
+  const [{ recording, recordingText, shouldUpdateText }, setRecordingState] =
+    useState({
+      recording: false,
+      recordingText: "Recording in progress...",
+      shouldUpdateText: false,
+    });
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
@@ -174,19 +179,67 @@ export default function RecordingButton(props: ComponentProps) {
 
   // Function to start recording
   const startRecording = () => {
-    setRecording(true);
+    setRecordingState((prev) => {
+      return {
+        ...prev,
+        recording: true,
+      };
+    });
     if (mediaRecorder) {
       mediaRecorder.start();
-      setRecording(true);
     }
   };
   // Function to stop recording
   const stopRecording = () => {
-    setRecording(false);
+    setRecordingState((prev) => {
+      return {
+        ...prev,
+        recording: false,
+      };
+    });
     if (mediaRecorder) {
       mediaRecorder.stop();
-      setRecording(false);
       startLoading();
+    }
+  };
+
+  function round(value: number, precision: number) {
+    var multiplier = Math.pow(10, precision || 0);
+    return Math.round(value * multiplier) / multiplier;
+  }
+
+  // This useEffect hook updates the recording text
+  useEffect(() => {
+    if (shouldUpdateText) {
+      setRecordingState((prev) => {
+        return {
+          ...prev,
+          recordingText:
+            prev.recordingText === "Click the button to stop recording"
+              ? "Recording in progress..."
+              : "Click the button to stop recording",
+        };
+      });
+    }
+  }, [shouldUpdateText]);
+
+  const onUpdateFrame = (latest: ResolvedValues) => {
+    const value = round(latest.opacity as number, 2);
+    if (value < 0.01) {
+      setRecordingState((prev) => {
+        return {
+          ...prev,
+          shouldUpdateText: true,
+        };
+      });
+    }
+    if (value > 0.01) {
+      setRecordingState((prev) => {
+        return {
+          ...prev,
+          shouldUpdateText: false,
+        };
+      });
     }
   };
 
@@ -210,13 +263,29 @@ export default function RecordingButton(props: ComponentProps) {
       )}
       <div className="text-md w-full relative">
         <div className="absolute top-2/4 left-2/4 translate-x-[-50%] translate-y-[-50%] w-full">
-          {recording
-            ? "Recording in progress... Press the button again to stop recording"
-            : playingResponse
-            ? "Playing response..."
-            : loading
-            ? "Please wait..."
-            : "Click the button to start recording"}
+          {recording ? (
+            <LazyMotion features={domAnimation}>
+              <m.div
+                key="recording"
+                initial={{ opacity: 1 }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 2,
+                  repeatType: "reverse",
+                }}
+                animate={{ opacity: 0 }}
+                onUpdate={onUpdateFrame}
+              >
+                {recordingText}
+              </m.div>
+            </LazyMotion>
+          ) : playingResponse ? (
+            "Playing response..."
+          ) : loading ? (
+            "Please wait..."
+          ) : (
+            "Click the button to start recording"
+          )}
         </div>
       </div>
     </div>

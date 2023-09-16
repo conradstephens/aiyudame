@@ -211,7 +211,7 @@ export default function RecordingButton(props: ComponentProps) {
       <div className="text-md w-full relative">
         <div className="absolute top-2/4 left-2/4 translate-x-[-50%] translate-y-[-50%] w-full">
           {recording
-            ? "Recording... Press the button again to stop recording"
+            ? "Recording in progress... Press the button again to stop recording"
             : playingResponse
             ? "Playing response..."
             : loading

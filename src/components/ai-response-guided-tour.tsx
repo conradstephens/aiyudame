@@ -1,8 +1,10 @@
 import { showAiResponseJoyRideAtom } from "@/atoms";
+import { darkStyles, lightStyles } from "@/constants/guided-tour";
 import { set } from "idb-keyval";
 import { useAtom } from "jotai";
 import { useTheme } from "next-themes";
-import Joyride, { Step, Styles } from "react-joyride";
+import Joyride, { Step } from "react-joyride";
+import Tooltip from "@/components/guided-tour-tooltip";
 
 export default function AiResponseGuidedTour() {
   const [run, setRun] = useAtom(showAiResponseJoyRideAtom);
@@ -16,46 +18,6 @@ export default function AiResponseGuidedTour() {
       showSkipButton: false,
     },
   ];
-
-  const lightStyles: Styles = {
-    options: {
-      backgroundColor: "#FFF",
-      arrowColor: "#FFF",
-      primaryColor: "rgb(9, 9, 11)",
-      textColor: "rgb(9, 9, 11)",
-      zIndex: 1000,
-    },
-    tooltip: {
-      borderWidth: "1px",
-      borderColor: "rgb(228 228 231)",
-    },
-    buttonNext: {
-      color: "#FFF",
-    },
-    buttonClose: {
-      color: "#FFF",
-    },
-  };
-
-  const darkStyles: Styles = {
-    options: {
-      backgroundColor: "rgb(9, 9, 11)",
-      arrowColor: "rgb(9, 9, 11)",
-      primaryColor: "#FFF",
-      textColor: "#FFF",
-      zIndex: 1000,
-    },
-    tooltip: {
-      borderWidth: "1px",
-      borderColor: "rgb(39 39 42)",
-    },
-    buttonNext: {
-      color: "rgb(9, 9, 11)",
-    },
-    buttonClose: {
-      color: "rgb(9, 9, 11)",
-    },
-  };
 
   return (
     <Joyride
@@ -74,6 +36,7 @@ export default function AiResponseGuidedTour() {
           setRun(false);
         }
       }}
+      tooltipComponent={Tooltip}
     />
   );
 }

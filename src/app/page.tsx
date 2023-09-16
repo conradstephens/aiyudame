@@ -1,7 +1,7 @@
 "use client";
 
 import ThemeToggle from "@/components/theme-toggle";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { set, get, del } from "idb-keyval";
 import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
@@ -109,7 +109,7 @@ export default function Home() {
 
   if (!sessionId) {
     return (
-      <div className="flex justify-center h-screen items-center">
+      <div className="flex justify-center h-screen items-center zinc">
         <Loader2 className="h-14 w-14 animate-spin" />
       </div>
     );

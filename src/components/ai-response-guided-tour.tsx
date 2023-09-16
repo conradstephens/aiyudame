@@ -35,7 +35,7 @@ export default function AiResponseGuidedTour() {
       showProgress
       showSkipButton
       locale={{
-        last: "Finish",
+        last: "Close",
       }}
       callback={callback}
       tooltipComponent={Tooltip}

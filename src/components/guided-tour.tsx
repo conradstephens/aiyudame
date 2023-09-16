@@ -13,6 +13,14 @@ export default function GuidedTour() {
 
   const steps: Step[] = [
     {
+      target: ".app-container",
+      title: "Welcome to AIyudame!",
+      content: "Let's get started with a quick tour of the app.",
+      placement: "center",
+      disableBeacon: true,
+      showSkipButton: true,
+    },
+    {
       target: ".language-select",
       content: "You can select the language you want the AI to speak in.",
       disableBeacon: true,

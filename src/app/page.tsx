@@ -121,7 +121,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex justify-center h-screen">
+    <div className="flex justify-center h-screen app-container">
       <div className="flex flex-col gap-5 p-5 sm:max-w-7xl w-full">
         <div
           className={clsx(

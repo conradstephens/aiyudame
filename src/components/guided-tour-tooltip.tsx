@@ -21,6 +21,7 @@ export default function Tooltip(props: TooltipRenderProps) {
     primaryProps,
     tooltipProps,
     size,
+    skipProps,
     isLastStep,
   } = props;
 
@@ -45,9 +46,16 @@ export default function Tooltip(props: TooltipRenderProps) {
         </Button> */}
         </div>
         <CardTitle>{step.title}</CardTitle>
-        <CardDescription>{step.content}</CardDescription>
+        <CardDescription className="whitespace-pre-line">
+          {step.content}
+        </CardDescription>
       </CardHeader>
       <CardFooter className="flex flex-row justify-end gap-2">
+        {index === 0 && (
+          <Button {...skipProps} variant="ghost" id="skip">
+            Skip
+          </Button>
+        )}
         {index > 0 && (
           <Button variant="ghost" {...backProps}>
             Back

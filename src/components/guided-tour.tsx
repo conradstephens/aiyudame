@@ -15,7 +15,7 @@ export default function GuidedTour() {
     {
       target: ".app-container",
       title: "Welcome to AIyudame!",
-      content: "Let's get started with a quick tour of the app.",
+      content: "Let's get started with a quick tour! 🚀",
       placement: "center",
       disableBeacon: true,
       showSkipButton: true,
@@ -56,14 +56,14 @@ export default function GuidedTour() {
     {
       target: ".recording-button",
       content:
-        "Talk to the AI as if you were talking to a friend. The AI will respond to you in the language you selected.",
+        "Talk to the AI as if you were talking to a friend. Be creative! Ask it questions, tell it a story, or just say hello.\n\n Have fun! 😃",
       disableBeacon: true,
       showSkipButton: false,
     },
   ];
 
   const callback = async ({ status }: CallBackProps) => {
-    if (status === "finished") {
+    if (status === "finished" || status === "skipped") {
       await set("isReturningUser", true);
       setRun(false);
       setIsReturningUser(true);
@@ -77,7 +77,6 @@ export default function GuidedTour() {
       styles={theme === "dark" ? darkStyles : lightStyles}
       continuous
       showProgress
-      showSkipButton
       locale={{
         last: "Finish",
       }}

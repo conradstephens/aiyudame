@@ -33,7 +33,6 @@ export default function AiResponseGuidedTour() {
       styles={theme === "dark" ? darkStyles : lightStyles}
       continuous
       showProgress
-      showSkipButton
       locale={{
         last: "Close",
       }}

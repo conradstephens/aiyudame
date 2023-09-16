@@ -52,16 +52,19 @@ export default function Home() {
     const retrieveSession = async () => {
       // get the settings
       // get the conversation session id
-      const [isReturningUser, settings, session, previousResponse] =
-        await getMany([
-          "isReturningUser",
-          "settings",
-          "session",
-          "previousResponse",
-        ]);
-      const hasFinishedAiResponseJoyride = await get(
+      const [
+        isReturningUser,
+        settings,
+        session,
+        previousResponse,
+        hasFinishedAiResponseJoyride,
+      ] = await getMany([
+        "isReturningUser",
+        "settings",
+        "session",
+        "previousResponse",
         "hasFinishedAiResponseJoyride",
-      );
+      ]);
       setIsReturningUser(!!isReturningUser);
       setShowAiResponseJoyRide(!hasFinishedAiResponseJoyride);
       if (settings) {

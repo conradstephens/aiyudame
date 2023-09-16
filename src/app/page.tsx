@@ -156,9 +156,9 @@ export default function Home() {
               <div className="w-full max-h-[50%] overflow-y-auto">
                 {language === "es" &&
                   words.map((word, index) => (
-                    <div key={index} className={`word-${index}`}>
+                    <span key={index} className={`word-${index}`}>
                       <AiResponseWord word={word} context={text} />
-                    </div>
+                    </span>
                   ))}
               </div>
               <RecordingButton language={language} />

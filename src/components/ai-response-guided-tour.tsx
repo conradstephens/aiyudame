@@ -3,7 +3,7 @@ import { darkStyles, lightStyles } from "@/constants/guided-tour";
 import { set } from "idb-keyval";
 import { useAtom } from "jotai";
 import { useTheme } from "next-themes";
-import Joyride, { Step } from "react-joyride";
+import Joyride, { CallBackProps, Step } from "react-joyride";
 import Tooltip from "@/components/guided-tour-tooltip";
 
 export default function AiResponseGuidedTour() {
@@ -19,6 +19,13 @@ export default function AiResponseGuidedTour() {
     },
   ];
 
+  const callback = async ({ status }: CallBackProps) => {
+    if (status === "finished") {
+      await set("hasFinishedAiResponseJoyride", true);
+      setRun(false);
+    }
+  };
+
   return (
     <Joyride
       run={run}
@@ -30,12 +37,7 @@ export default function AiResponseGuidedTour() {
       locale={{
         last: "Finish",
       }}
-      callback={async ({ status }) => {
-        if (status === "finished") {
-          await set("hasFinishedAiResponseJoyride", true);
-          setRun(false);
-        }
-      }}
+      callback={callback}
       tooltipComponent={Tooltip}
     />
   );

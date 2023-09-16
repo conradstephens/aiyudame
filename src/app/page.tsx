@@ -2,7 +2,7 @@
 
 import ThemeToggle from "@/components/theme-toggle";
 import { useEffect } from "react";
-import { set, get, del } from "idb-keyval";
+import { set, get, del, getMany, setMany } from "idb-keyval";
 import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
 import { nanoid } from "nanoid";
@@ -50,19 +50,30 @@ export default function Home() {
 
   useEffect(() => {
     const retrieveSession = async () => {
-      const isReturningUser = await get("isReturningUser");
+      // get the settings
+      // get the conversation session id
+      const [isReturningUser, settings, session, previousResponse] =
+        await getMany([
+          "isReturningUser",
+          "settings",
+          "session",
+          "previousResponse",
+        ]);
       const hasFinishedAiResponseJoyride = await get(
         "hasFinishedAiResponseJoyride",
       );
       setIsReturningUser(!!isReturningUser);
       setShowAiResponseJoyRide(!hasFinishedAiResponseJoyride);
-      // get the settings
-      const settings = await get("settings");
       if (settings) {
         methods.setValue("language", settings.language);
       }
-      // get the conversation session id
-      const session = await get("session");
+      // restore the last thing the ai said
+      if (previousResponse) {
+        setResponse({
+          text: previousResponse,
+          words: previousResponse.split(" "),
+        });
+      }
       // if session id is not present, create a new session id
       if (!session) {
         await createSession();
@@ -83,14 +94,6 @@ export default function Home() {
       }
       // if session id is present and not expired, use the session id
       setSessionId(id);
-      // restore the last thing the ai said
-      const previousResponse = await get("previousResponse");
-      if (previousResponse) {
-        setResponse({
-          text: previousResponse,
-          words: previousResponse.split(" "),
-        });
-      }
     };
     retrieveSession();
   }, []);
@@ -101,8 +104,10 @@ export default function Home() {
   };
 
   const handleSkipTutorial = async () => {
-    await set("isReturningUser", true);
-    await set("hasFinishedAiResponseJoyride", true);
+    await setMany([
+      ["isReturningUser", true],
+      ["hasFinishedAiResponseJoyride", true],
+    ]);
     setShowJoyride(false);
     setShowAiResponseJoyRide(false);
   };

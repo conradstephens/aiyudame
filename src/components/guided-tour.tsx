@@ -2,7 +2,7 @@ import { isReturningUserAtom, showJoyRideAtom } from "@/atoms";
 import { set } from "idb-keyval";
 import { useAtom, useSetAtom } from "jotai";
 import { useTheme } from "next-themes";
-import Joyride, { Step } from "react-joyride";
+import Joyride, { CallBackProps, Step } from "react-joyride";
 import Tooltip from "@/components/guided-tour-tooltip";
 import { darkStyles, lightStyles } from "@/constants/guided-tour";
 
@@ -54,6 +54,14 @@ export default function GuidedTour() {
     },
   ];
 
+  const callback = async ({ status }: CallBackProps) => {
+    if (status === "finished") {
+      await set("isReturningUser", true);
+      setRun(false);
+      setIsReturningUser(true);
+    }
+  };
+
   return (
     <Joyride
       run={run}
@@ -65,14 +73,7 @@ export default function GuidedTour() {
       locale={{
         last: "Finish",
       }}
-      callback={async ({ status }) => {
-        if (status === "finished") {
-          await set("isReturningUser", true);
-          await set("hasFinishedJoyride", true);
-          setRun(false);
-          setIsReturningUser(true);
-        }
-      }}
+      callback={callback}
       tooltipComponent={Tooltip}
     />
   );

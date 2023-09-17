@@ -3,11 +3,16 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { LazyMotion, ResolvedValues, domAnimation, m } from "framer-motion";
-import clsx from "clsx";
 import { Loader2 } from "lucide-react";
-import { useAtomValue, useSetAtom } from "jotai";
-import { aiTextResponseAtom, sessionIdAtom, showJoyRideAtom } from "@/atoms";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import {
+  aiTextResponseAtom,
+  recordingAtom,
+  sessionIdAtom,
+  showJoyRideAtom,
+} from "@/atoms";
 import { set } from "idb-keyval";
+import { Button } from "./ui/button";
 
 interface ComponentProps {
   language: string;
@@ -19,11 +24,7 @@ export default function RecordingButton(props: ComponentProps) {
   const showJoyride = useAtomValue(showJoyRideAtom);
   const [playingResponse, setPlayingResponse] = useState(false);
   const [{ recording, recordingText, shouldUpdateText }, setRecordingState] =
-    useState({
-      recording: false,
-      recordingText: "Recording in progress...",
-      shouldUpdateText: false,
-    });
+    useAtom(recordingAtom);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
@@ -215,9 +216,9 @@ export default function RecordingButton(props: ComponentProps) {
         return {
           ...prev,
           recordingText:
-            prev.recordingText === "Click the button to stop recording"
+            prev.recordingText === "Click to stop recording"
               ? "Recording in progress..."
-              : "Click the button to stop recording",
+              : "Click to stop recording",
         };
       });
     }
@@ -246,48 +247,43 @@ export default function RecordingButton(props: ComponentProps) {
   return (
     <div className="w-full flex flex-col gap-10 text-center justify-center items-center">
       {playingResponse || loading ? (
-        <Loader2 className="h-14 w-14 animate-spin" />
+        <div className="flex flex-col gap-1 items-center">
+          <Loader2 className="h-14 w-14 animate-spin" />
+          {playingResponse ? "Playing response..." : "Please wait..."}
+        </div>
       ) : (
-        <LazyMotion features={domAnimation}>
-          <m.button
-            disabled={loading || playingResponse}
-            onClick={recording ? stopRecording : startRecording}
-            className={clsx(
-              "bg-red-500 border-2 border-red-500 h-12 w-12",
-              "recording-button",
-            )}
-            initial={{ borderRadius: "100%" }}
-            animate={recording ? { borderRadius: "20%" } : {}}
-          />
-        </LazyMotion>
-      )}
-      <div className="text-md w-full relative">
-        <div className="absolute top-2/4 left-2/4 translate-x-[-50%] translate-y-[-50%] w-full">
+        <div className="text-md w-full relative">
+          {/* <div className="relative mr-4">
+            <div className="h-4 w-4 rounded-[4px] bg-zinc-950" />
+            <div className="absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%]">
+            <Loader2 className="h-10 w-10 animate-spin text-zinc-950" />
+            </div>
+          </div> */}
           {recording ? (
-            <LazyMotion features={domAnimation}>
-              <m.div
-                key="recording"
-                initial={{ opacity: 1 }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 2,
-                  repeatType: "reverse",
-                }}
-                animate={{ opacity: 0 }}
-                onUpdate={onUpdateFrame}
-              >
-                {recordingText}
-              </m.div>
-            </LazyMotion>
-          ) : playingResponse ? (
-            "Playing response..."
-          ) : loading ? (
-            "Please wait..."
+            <Button onClick={stopRecording} className="w-56">
+              <LazyMotion features={domAnimation}>
+                <m.div
+                  key="recording"
+                  initial={{ opacity: 1 }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 2,
+                    repeatType: "reverse",
+                  }}
+                  animate={{ opacity: 0 }}
+                  onUpdate={onUpdateFrame}
+                >
+                  {recordingText}
+                </m.div>
+              </LazyMotion>
+            </Button>
           ) : (
-            "Click the button to start recording"
+            <Button onClick={startRecording} className="w-56">
+              Click here to start recording
+            </Button>
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

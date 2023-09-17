@@ -1,16 +1,17 @@
 "use client";
 
 import ThemeToggle from "@/components/theme-toggle";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { set, del, getMany, setMany } from "idb-keyval";
 import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
 import { nanoid } from "nanoid";
 import RecordingButton from "@/components/recording-button";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   aiTextResponseAtom,
   isReturningUserAtom,
+  recordingAtom,
   sessionIdAtom,
   showAiResponseJoyRideAtom,
   showJoyRideAtom,
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import clsx from "clsx";
 import GuidedTour from "@/components/guided-tour";
 import AiResponseGuidedTour from "@/components/ai-response-guided-tour";
+import SuggestResponsePopover from "@/components/suggest-response-popover";
 
 export default function Home() {
   const [sessionId, setSessionId] = useAtom(sessionIdAtom);
@@ -28,6 +30,8 @@ export default function Home() {
   const [showJoyride, setShowJoyride] = useAtom(showJoyRideAtom);
   const setShowAiResponseJoyRide = useSetAtom(showAiResponseJoyRideAtom);
   const [isReturningUser, setIsReturningUser] = useAtom(isReturningUserAtom);
+  const { recording } = useAtomValue(recordingAtom);
+  const [showSuggestionButton, setShowSuggestionButton] = React.useState(false);
   const methods = useForm({
     defaultValues: {
       language: "es",
@@ -116,6 +120,22 @@ export default function Home() {
     setShowAiResponseJoyRide(false);
   };
 
+  useEffect(() => {
+    if (recording) {
+      setShowSuggestionButton(false);
+    }
+  }, [recording]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (text.length) {
+      timer = setTimeout(() => {
+        setShowSuggestionButton(true);
+      }, 5000);
+    }
+    return () => clearTimeout(timer);
+  }, [text]);
+
   if (!sessionId) {
     return (
       <div className="flex justify-center h-screen items-center zinc">
@@ -161,18 +181,26 @@ export default function Home() {
         ) : (
           // show the main screen
           <>
-            <div className="w-full flex flex-col text-center justify-center items-center h-full gap-20">
-              <div className="w-full max-h-[50%] overflow-y-auto">
-                {language === "es" &&
-                  words.map((word, index) => (
-                    <span key={index} className={`word-${index}`}>
-                      <AiResponseWord word={word} context={text} />
-                    </span>
-                  ))}
+            <div className="w-full flex flex-col text-center justify-center items-center h-full gap-10">
+              <div className="max-h-[60%] overflow-y-auto">
+                {language === "es" && (
+                  <React.Fragment>
+                    {words.map((word, index) => (
+                      <span key={index} className={`word-${index}`}>
+                        <AiResponseWord word={word} context={text} />
+                      </span>
+                    ))}
+                  </React.Fragment>
+                )}
               </div>
-              <RecordingButton language={language} />
+              <div className="flex flex-col gap-3 w-full items-center">
+                <RecordingButton language={language} />
+                {showSuggestionButton && (
+                  <SuggestResponsePopover context={text} />
+                )}
+              </div>
             </div>
-            <GuidedTour />
+            {!isReturningUser && <GuidedTour />}
             {!!words.length && <AiResponseGuidedTour />}
           </>
         )}

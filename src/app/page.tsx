@@ -195,7 +195,7 @@ export default function Home() {
               </div>
               <div className="flex flex-col gap-3 w-full items-center">
                 <RecordingButton language={language} />
-                {showSuggestionButton && (
+                {(showSuggestionButton || showJoyride) && (
                   <SuggestResponsePopover context={text} />
                 )}
               </div>

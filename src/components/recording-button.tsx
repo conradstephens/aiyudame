@@ -278,7 +278,7 @@ export default function RecordingButton(props: ComponentProps) {
               </LazyMotion>
             </Button>
           ) : (
-            <Button onClick={startRecording} className="w-56">
+            <Button onClick={startRecording} className="w-56 recording-button">
               Click here to start recording
             </Button>
           )}

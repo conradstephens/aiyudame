@@ -13,6 +13,8 @@ import { Button } from "./ui/button";
 import clsx from "clsx";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import React from "react";
+import { showJoyRideAtom } from "@/atoms";
+import { useAtomValue } from "jotai";
 
 interface ComponentProps {
   context: string;
@@ -23,6 +25,7 @@ export default function SuggestResponsePopover(props: ComponentProps) {
   const [suggestion, setSuggestion] = useState("");
   const { toast } = useToast();
   const [openSheet, setOpenSheet] = useState(false);
+  const showJoyride = useAtomValue(showJoyRideAtom);
 
   // create media query to detect if the user is on a mobile device
   const [isMobile, setIsMobile] = useState(false);
@@ -52,6 +55,7 @@ export default function SuggestResponsePopover(props: ComponentProps) {
 
   const getSuggestion = async () => {
     try {
+      if (showJoyride) return;
       handleOpenSheet();
       if (suggestion.length) {
         return;
@@ -114,6 +118,8 @@ export default function SuggestResponsePopover(props: ComponentProps) {
           "animate-pulse w-56 italic text-xs",
           suggestion.length && "animate-none",
           className,
+          "suggest-response-button",
+          showJoyride && "animate-none",
         )}
       >
         Suggest response

@@ -54,6 +54,12 @@ export default function GuidedTour() {
       showSkipButton: false,
     },
     {
+      target: ".suggest-response-button",
+      content: "Click this button to suggest a response to the AI.",
+      disableBeacon: true,
+      showSkipButton: false,
+    },
+    {
       target: ".recording-button",
       content:
         "Talk to the AI as if you were talking to a friend. Be creative! Ask it questions, tell it a story, or just say hello.\n\n Have fun! 😃",

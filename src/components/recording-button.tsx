@@ -279,7 +279,7 @@ export default function RecordingButton(props: ComponentProps) {
             </Button>
           ) : (
             <Button onClick={startRecording} className="w-56 recording-button">
-              Click here to start recording
+              Start recording
             </Button>
           )}
         </div>

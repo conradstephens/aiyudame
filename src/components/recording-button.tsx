@@ -13,6 +13,7 @@ import {
 } from "@/atoms";
 import { set } from "idb-keyval";
 import { Button } from "./ui/button";
+import { isAppleEnvironment } from "@/lib/utils";
 
 interface ComponentProps {
   language: string;
@@ -43,138 +44,157 @@ export default function RecordingButton(props: ComponentProps) {
     setLoading(false);
   };
 
+  const loadPolyfill = async () => {
+    if (isAppleEnvironment()) {
+      //? mobile iOS devices and Safari on mac creates a weird file format that is not supported by openai
+      //? so we use a polyfill that creates a support file format when recording is
+      const AudioRecorder = (await import("audio-recorder-polyfill")).default;
+      console.log("loaded polyfill");
+      window.MediaRecorder = AudioRecorder;
+      return true;
+    }
+  };
+
   // This useEffect hook sets up the media recorder when the component mounts
   useEffect(() => {
     if (typeof window !== "undefined" && sessionId && !showJoyride) {
       console.log("setting up media recorder");
       let chunks: Blob[] = [];
-      navigator.mediaDevices
-        .getUserMedia({ audio: true })
-        .then((stream) => {
-          const newMediaRecorder = new MediaRecorder(stream);
-          newMediaRecorder.onstart = () => {
-            chunks = [];
-          };
-          newMediaRecorder.ondataavailable = (e) => {
-            chunks.push(e.data);
-          };
+      const initalizeMediaRecorder = async () => {
+        // load the polyfill if the browser is safari
+        const isPolyfillLoaded = await loadPolyfill();
 
-          newMediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(chunks, { type: "audio/webm" });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            audio.onerror = function (err) {
-              console.error("Error playing audio:", err);
-              stopLoading();
-            };
-            const reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-            reader.onloadend = async function () {
-              try {
-                if (typeof reader.result !== "string") {
-                  stopLoading();
-                  throw new Error("Unexpected result type");
-                }
-                // transcribe audio and begin conversation with openai
-                const base64Audio = reader.result.split(",")[1]; // Remove the data URL prefix
-                const response = await fetch("/api/speechToText", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    audio: base64Audio,
-                    sessionId,
-                    language,
-                  }),
-                });
+        navigator.mediaDevices
+          .getUserMedia({ audio: true })
+          .then((stream) => {
+            const newMediaRecorder = new MediaRecorder(stream);
+            newMediaRecorder.addEventListener("start", () => {
+              chunks = [];
+            });
+            newMediaRecorder.addEventListener("dataavailable", (e) => {
+              chunks.push(e.data);
+            });
 
-                const data = await response.json();
-                if (!response.ok) {
-                  stopLoading();
-                  throw new Error(data.error);
-                }
-                const text: string = data.openaiResponse;
-
-                const audioContext = new AudioContext();
-                const audioElement = new Audio();
-                audioElement.controls = true;
-
-                URL.revokeObjectURL(audioElement.src);
-
-                let modelId = "eleven_monolingual_v1";
-                let voiceId = "7arsGG6R4puBzDqYy6xu";
-
-                if (language === "es") {
-                  modelId = "eleven_multilingual_v2";
-                  voiceId = "N4Jse6hDfsD4Iqv16pxy";
-                }
-                // generate audio from openai response
-                const elevenLabsRes = await fetch(
-                  `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
-                  {
+            newMediaRecorder.addEventListener("stop", async () => {
+              // if polyfill is loaded, use wav format
+              const fileType = isPolyfillLoaded ? "audio/wav" : "audio/webm";
+              const audioBlob = new Blob(chunks, { type: fileType });
+              const audioUrl = URL.createObjectURL(audioBlob);
+              const audio = new Audio(audioUrl);
+              audio.onerror = (err) => {
+                console.error("Error playing audio:", err);
+                stopLoading();
+              };
+              const reader = new FileReader();
+              reader.readAsDataURL(audioBlob);
+              reader.onloadend = async function () {
+                try {
+                  if (typeof reader.result !== "string") {
+                    stopLoading();
+                    throw new Error("Unexpected result type");
+                  }
+                  // transcribe audio and begin conversation with openai
+                  const base64Audio = reader.result.split(",")[1]; // Remove the data URL prefix
+                  const response = await fetch("/api/speechToText", {
                     method: "POST",
                     headers: {
-                      accept: "audio/mpeg",
                       "Content-Type": "application/json",
-                      "xi-api-key": process.env
-                        .NEXT_PUBLIC_ELEVENLABS_API_KEY as string,
                     },
                     body: JSON.stringify({
-                      text,
-                      model_id: modelId,
+                      audio: base64Audio,
+                      sessionId,
+                      language,
                     }),
-                  },
-                );
+                  });
 
-                const elevenlabsBody = elevenLabsRes.body;
+                  const data = await response.json();
+                  if (!response.ok) {
+                    stopLoading();
+                    throw new Error(data.error);
+                  }
+                  const text: string = data.openaiResponse;
 
-                if (!elevenLabsRes.ok || !elevenlabsBody) {
-                  const error = await elevenLabsRes.json();
-                  console.error("Error generating audio:", error);
-                  throw new Error("Error generating audio");
+                  const audioContext = new AudioContext();
+                  const audioElement = new Audio();
+                  audioElement.controls = true;
+
+                  URL.revokeObjectURL(audioElement.src);
+
+                  let modelId = "eleven_monolingual_v1";
+                  let voiceId = "7arsGG6R4puBzDqYy6xu";
+
+                  if (language === "es") {
+                    modelId = "eleven_multilingual_v2";
+                    voiceId = "N4Jse6hDfsD4Iqv16pxy";
+                  }
+                  // generate audio from openai response
+                  const elevenLabsRes = await fetch(
+                    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
+                    {
+                      method: "POST",
+                      headers: {
+                        accept: "audio/mpeg",
+                        "Content-Type": "application/json",
+                        "xi-api-key": process.env
+                          .NEXT_PUBLIC_ELEVENLABS_API_KEY as string,
+                      },
+                      body: JSON.stringify({
+                        text,
+                        model_id: modelId,
+                      }),
+                    },
+                  );
+
+                  const elevenlabsBody = elevenLabsRes.body;
+
+                  if (!elevenLabsRes.ok || !elevenlabsBody) {
+                    const error = await elevenLabsRes.json();
+                    console.error("Error generating audio:", error);
+                    throw new Error("Error generating audio");
+                  }
+
+                  // stream the response
+                  const audioBuffer = await new Response(
+                    elevenlabsBody,
+                  ).arrayBuffer();
+
+                  const audioSource = audioContext.createBufferSource();
+
+                  audioContext.decodeAudioData(audioBuffer, async (buffer) => {
+                    audioSource.buffer = buffer;
+                    audioSource.connect(audioContext.destination);
+                    //  store the response in local storage
+                    await set("previousResponse", text);
+                    // set text
+                    const words = text.split(" ");
+
+                    setAiTextResponse({ text, words });
+                    audioSource.onended = () => stopLoading();
+                    audioSource.start();
+                    setPlayingResponse(true);
+                  });
+                } catch (error: any) {
+                  console.error(error);
+                  stopLoading();
+                  toast({
+                    description: error.message,
+                    variant: "destructive",
+                  });
                 }
-
-                // stream the response
-                const audioBuffer = await new Response(
-                  elevenlabsBody,
-                ).arrayBuffer();
-
-                const audioSource = audioContext.createBufferSource();
-
-                audioContext.decodeAudioData(audioBuffer, async (buffer) => {
-                  audioSource.buffer = buffer;
-                  audioSource.connect(audioContext.destination);
-                  //  store the response in local storage
-                  await set("previousResponse", text);
-                  // set text
-                  const words = text.split(" ");
-
-                  setAiTextResponse({ text, words });
-                  audioSource.onended = () => stopLoading();
-                  audioSource.start();
-                  setPlayingResponse(true);
-                });
-              } catch (error: any) {
-                console.error(error);
-                stopLoading();
-                toast({
-                  description: error.message,
-                  variant: "destructive",
-                });
-              }
-            };
-          };
-          setMediaRecorder(newMediaRecorder);
-        })
-        .catch((error: any) => {
-          console.error(error);
-          stopLoading();
-          toast({
-            description: "Please allow microphone access to continue",
-            variant: "destructive",
+              };
+            });
+            setMediaRecorder(newMediaRecorder);
+          })
+          .catch((error: any) => {
+            console.error(error);
+            stopLoading();
+            toast({
+              description: "Please allow microphone access to continue",
+              variant: "destructive",
+            });
           });
-        });
+      };
+      initalizeMediaRecorder();
     }
   }, [sessionId, showJoyride]);
 

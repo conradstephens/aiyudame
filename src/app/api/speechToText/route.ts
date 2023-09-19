@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createConversation } from "@/text-generation";
 import { convertAudioToText } from "@/speech-to-text";
+import "dayjs/locale/es";
 
 // Text that gets transcribed when there is nobody speaking in the audio
 // help reduce hallucination
@@ -36,20 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await createConversation(
-      transcribedText,
-      sessionId,
-      language,
-    );
-    console.log("ai:", response);
-    if (!response) {
-      return NextResponse.json(
-        { error: "Error creating conversation" },
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json({ openaiResponse: response });
+    return NextResponse.json({ text: transcribedText }, { status: 200 });
   } catch (error: any) {
     // Handle any errors that occur during the request
     if (error.response) {

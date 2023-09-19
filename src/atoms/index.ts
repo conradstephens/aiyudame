@@ -12,4 +12,4 @@ export const recordingAtom = atom({
   recording: false,
   recordingText: "Recording in progress...",
   shouldUpdateText: false,
-})
+});

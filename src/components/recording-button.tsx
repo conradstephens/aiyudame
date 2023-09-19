@@ -108,11 +108,48 @@ export default function RecordingButton(props: ComponentProps) {
                   });
 
                   const data = await response.json();
-                  if (!response.ok) {
+
+                  if (!response.ok || data.error) {
                     stopLoading();
                     throw new Error(data.error);
                   }
-                  const text: string = data.openaiResponse;
+
+                  const humanResponse = data.text;
+
+                  const opeanAiChatRes = await fetch("/api/chatCompletion", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      content: humanResponse,
+                      sessionId,
+                      language,
+                    }),
+                  });
+
+                  if (!opeanAiChatRes.ok) {
+                    stopLoading();
+                    throw new Error("Error generating openai response");
+                  }
+
+                  const body = opeanAiChatRes.body;
+
+                  if (!body) {
+                    return;
+                  }
+                  const openAiReader = body.getReader();
+                  const decoder = new TextDecoder();
+                  let aiResponse = "";
+                  let done = false;
+
+                  while (!done) {
+                    const { value, done: doneReading } =
+                      await openAiReader.read();
+                    done = doneReading;
+                    const chunkValue = decoder.decode(value);
+                    aiResponse += chunkValue;
+                  }
 
                   const audioContext = new AudioContext();
                   const audioElement = new Audio();
@@ -139,7 +176,7 @@ export default function RecordingButton(props: ComponentProps) {
                           .NEXT_PUBLIC_ELEVENLABS_API_KEY as string,
                       },
                       body: JSON.stringify({
-                        text,
+                        text: aiResponse,
                         model_id: modelId,
                       }),
                     },
@@ -160,16 +197,37 @@ export default function RecordingButton(props: ComponentProps) {
 
                   const audioSource = audioContext.createBufferSource();
 
+                  const onended = async () => {
+                    stopLoading();
+
+                    // save the chats to db
+                    const res = await fetch("/api/storeNewChats", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        sessionId,
+                        humanResponse,
+                        aiResponse,
+                      }),
+                    });
+
+                    if (!res.ok) {
+                      console.error("Error storing chats");
+                    }
+                  };
+
                   audioContext.decodeAudioData(audioBuffer, async (buffer) => {
                     audioSource.buffer = buffer;
                     audioSource.connect(audioContext.destination);
                     //  store the response in local storage
-                    await set("previousResponse", text);
+                    await set("previousResponse", aiResponse);
                     // set text
-                    const words = text.split(" ");
+                    const words = aiResponse.split(" ");
 
-                    setAiTextResponse({ text, words });
-                    audioSource.onended = () => stopLoading();
+                    setAiTextResponse({ text: aiResponse, words });
+                    audioSource.onended = onended;
                     audioSource.start();
                     setPlayingResponse(true);
                   });

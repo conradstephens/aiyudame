@@ -146,7 +146,7 @@ export default function Home() {
 
   return (
     <div className="flex justify-center h-screen app-container">
-      <div className="flex flex-col gap-5 p-5 sm:max-w-7xl w-full">
+      <div className="flex flex-col p-5 sm:max-w-7xl w-full">
         <div
           className={clsx(
             "flex justify-between flex-row",
@@ -182,16 +182,13 @@ export default function Home() {
           // show the main screen
           <>
             <div className="w-full flex flex-col text-center justify-center items-center h-full gap-10">
-              <div className="max-h-[60%] overflow-y-auto">
-                {language === "es" && (
-                  <React.Fragment>
-                    {words.map((word, index) => (
-                      <span key={index} className={`word-${index}`}>
-                        <AiResponseWord word={word} context={text} />
-                      </span>
-                    ))}
-                  </React.Fragment>
-                )}
+              <div className="max-h-[50%] overflow-y-auto">
+                {language === "es" &&
+                  words.map((word, index) => (
+                    <span key={index} className={`word-${index}`}>
+                      <AiResponseWord word={word} context={text} />
+                    </span>
+                  ))}
               </div>
               <div className="flex flex-col gap-3 w-full items-center">
                 <RecordingButton language={language} />

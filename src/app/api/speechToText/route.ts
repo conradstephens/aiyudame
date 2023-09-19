@@ -25,8 +25,6 @@ export async function POST(request: NextRequest) {
   try {
     // Convert the audio data to text
     const transcribedText = await convertAudioToText(audio, language);
-    // Start a conversation with the AI
-    console.log("human:", transcribedText);
 
     // If the audio is empty, return an error
     if (badText.some((bad) => transcribedText === bad)) {

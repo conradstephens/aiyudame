@@ -17,10 +17,9 @@ export async function POST(request: NextRequest) {
   const sessionId = req.sessionId;
   const language = req.language;
 
-  console.log("sessionId", sessionId);
+  console.log("human => ", content);
 
   try {
-
     let systemPrompt = "";
 
     if (language === "es") {

@@ -9,6 +9,8 @@ export async function POST(request: NextRequest) {
   const aiResponse = req.aiResponse;
   const humanResponse = req.humanResponse;
 
+  console.log("ai => ", aiResponse);
+
   // Save the conversation to the database
   await prisma.conversation_history.createMany({
     data: [
@@ -25,7 +27,7 @@ export async function POST(request: NextRequest) {
     ],
   });
 
-  console.log("chat saved to database!")
+  console.log("chat saved to database!");
 
   return new Response("ok", { status: 200 });
 }

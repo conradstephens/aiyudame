@@ -157,66 +157,86 @@ export default function RecordingButton(props: ComponentProps) {
 
                   URL.revokeObjectURL(audioElement.src);
 
-                  let modelId = "eleven_monolingual_v1";
-                  let voiceId = "7arsGG6R4puBzDqYy6xu";
+                  const storeConversation = async () => {
+                    try {
+                      // save the chats to db
+                      const res = await fetch("/api/storeNewChats", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          sessionId,
+                          humanResponse,
+                          aiResponse,
+                        }),
+                      });
 
-                  if (language === "es") {
-                    modelId = "eleven_multilingual_v2";
-                    voiceId = "N4Jse6hDfsD4Iqv16pxy";
-                  }
-                  // generate audio from openai response
-                  const elevenLabsRes = await fetch(
-                    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
-                    {
-                      method: "POST",
-                      headers: {
-                        accept: "audio/mpeg",
-                        "Content-Type": "application/json",
-                        "xi-api-key": process.env
-                          .NEXT_PUBLIC_ELEVENLABS_API_KEY as string,
-                      },
-                      body: JSON.stringify({
-                        text: aiResponse,
-                        model_id: modelId,
-                      }),
-                    },
-                  );
+                      if (!res.ok) {
+                        console.error("Error storing chats");
+                        const data = await res.json();
+                        console.error(data);
+                      }
+                    } catch (e) {
+                      console.error("Error storing conversation", e);
+                    }
+                  };
 
-                  const elevenlabsBody = elevenLabsRes.body;
+                  const generateAudio = async () => {
+                    try {
+                      let modelId = "eleven_monolingual_v1";
+                      let voiceId = "7arsGG6R4puBzDqYy6xu";
 
-                  if (!elevenLabsRes.ok || !elevenlabsBody) {
-                    const error = await elevenLabsRes.json();
+                      if (language === "es") {
+                        modelId = "eleven_multilingual_v2";
+                        voiceId = "N4Jse6hDfsD4Iqv16pxy";
+                      }
+                      // generate audio from openai response
+                      const elevenLabsRes = await fetch(
+                        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
+                        {
+                          method: "POST",
+                          headers: {
+                            accept: "audio/mpeg",
+                            "Content-Type": "application/json",
+                            "xi-api-key": process.env
+                              .NEXT_PUBLIC_ELEVENLABS_API_KEY as string,
+                          },
+                          body: JSON.stringify({
+                            text: aiResponse,
+                            model_id: modelId,
+                          }),
+                        },
+                      );
+
+                      const json = await elevenLabsRes.json();
+                      const body = elevenLabsRes.body;
+                      return { body, ok: elevenLabsRes.ok, json };
+                    } catch (e) {
+                      console.error("Error generating audio", e);
+                    }
+                  };
+                  const [elevenLabsRes] = await Promise.all([
+                    generateAudio(),
+                    storeConversation(),
+                  ]);
+
+                  if (
+                    !elevenLabsRes ||
+                    !elevenLabsRes.ok ||
+                    !elevenLabsRes.body
+                  ) {
+                    const error = elevenLabsRes?.json;
                     console.error("Error generating audio:", error);
                     throw new Error("Error generating audio");
                   }
-
+                  const elevenlabsBody = elevenLabsRes.body;
                   // stream the response
                   const audioBuffer = await new Response(
                     elevenlabsBody,
                   ).arrayBuffer();
 
                   const audioSource = audioContext.createBufferSource();
-
-                  const onended = async () => {
-                    stopLoading();
-
-                    // save the chats to db
-                    const res = await fetch("/api/storeNewChats", {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                        sessionId,
-                        humanResponse,
-                        aiResponse,
-                      }),
-                    });
-
-                    if (!res.ok) {
-                      console.error("Error storing chats");
-                    }
-                  };
 
                   audioContext.decodeAudioData(audioBuffer, async (buffer) => {
                     audioSource.buffer = buffer;
@@ -227,7 +247,7 @@ export default function RecordingButton(props: ComponentProps) {
                     const words = aiResponse.split(" ");
 
                     setAiTextResponse({ text: aiResponse, words });
-                    audioSource.onended = onended;
+                    audioSource.onended = () => stopLoading();
                     audioSource.start();
                     setPlayingResponse(true);
                   });

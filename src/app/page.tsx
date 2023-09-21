@@ -7,11 +7,11 @@ import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
 import { nanoid } from "nanoid";
 import RecordingButton from "@/components/recording-button";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import {
   aiTextResponseAtom,
   isReturningUserAtom,
-  recordingAtom,
+  // recordingAtom,
   sessionIdAtom,
   showAiResponseJoyRideAtom,
   showJoyRideAtom,
@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import clsx from "clsx";
 import GuidedTour from "@/components/guided-tour";
 import AiResponseGuidedTour from "@/components/ai-response-guided-tour";
-import SuggestResponsePopover from "@/components/suggest-response-popover";
+// import SuggestResponsePopover from "@/components/suggest-response-popover";
 
 export default function Home() {
   const [sessionId, setSessionId] = useAtom(sessionIdAtom);
@@ -30,8 +30,8 @@ export default function Home() {
   const [showJoyride, setShowJoyride] = useAtom(showJoyRideAtom);
   const setShowAiResponseJoyRide = useSetAtom(showAiResponseJoyRideAtom);
   const [isReturningUser, setIsReturningUser] = useAtom(isReturningUserAtom);
-  const { recording } = useAtomValue(recordingAtom);
-  const [showSuggestionButton, setShowSuggestionButton] = React.useState(false);
+  // const { recording } = useAtomValue(recordingAtom);
+  // const [showSuggestionButton, setShowSuggestionButton] = React.useState(false);
   const methods = useForm({
     defaultValues: {
       language: "es",
@@ -120,21 +120,21 @@ export default function Home() {
     setShowAiResponseJoyRide(false);
   };
 
-  useEffect(() => {
-    if (recording) {
-      setShowSuggestionButton(false);
-    }
-  }, [recording]);
+  // useEffect(() => {
+  //   if (recording) {
+  //     setShowSuggestionButton(false);
+  //   }
+  // }, [recording]);
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (text.length) {
-      timer = setTimeout(() => {
-        setShowSuggestionButton(true);
-      }, 5000);
-    }
-    return () => clearTimeout(timer);
-  }, [text]);
+  // useEffect(() => {
+  //   let timer: NodeJS.Timeout;
+  //   if (text.length) {
+  //     timer = setTimeout(() => {
+  //       setShowSuggestionButton(true);
+  //     }, 5000);
+  //   }
+  //   return () => clearTimeout(timer);
+  // }, [text]);
 
   if (!sessionId) {
     return (
@@ -192,9 +192,9 @@ export default function Home() {
               </div>
               <div className="flex flex-col gap-3 w-full items-center">
                 <RecordingButton language={language} />
-                {(showSuggestionButton || showJoyride) && (
+                {/* {(showSuggestionButton || showJoyride) && (
                   <SuggestResponsePopover context={text} />
-                )}
+                )} */}
               </div>
             </div>
             {!isReturningUser && <GuidedTour />}

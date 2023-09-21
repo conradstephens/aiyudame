@@ -192,7 +192,7 @@ export default function RecordingButton(props: ComponentProps) {
                         voiceId = "N4Jse6hDfsD4Iqv16pxy";
                       }
                       // generate audio from openai response
-                      const elevenLabsRes = await fetch(
+                      const response = await fetch(
                         `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
                         {
                           method: "POST",
@@ -208,10 +208,7 @@ export default function RecordingButton(props: ComponentProps) {
                           }),
                         },
                       );
-
-                      const json = await elevenLabsRes.json();
-                      const body = elevenLabsRes.body;
-                      return { body, ok: elevenLabsRes.ok, json };
+                      return { response, ok: response.ok };
                     } catch (e) {
                       console.error("Error generating audio", e);
                     }
@@ -221,16 +218,16 @@ export default function RecordingButton(props: ComponentProps) {
                     storeConversation(),
                   ]);
 
-                  if (
-                    !elevenLabsRes ||
-                    !elevenLabsRes.ok ||
-                    !elevenLabsRes.body
-                  ) {
-                    const error = elevenLabsRes?.json;
+                  if (!elevenLabsRes || !elevenLabsRes.ok) {
+                    const error = await elevenLabsRes?.response.json();
                     console.error("Error generating audio:", error);
                     throw new Error("Error generating audio");
                   }
-                  const elevenlabsBody = elevenLabsRes.body;
+                  const elevenlabsBody = elevenLabsRes.response.body;
+
+                  if (!elevenlabsBody) {
+                    throw new Error("Error generating audio");
+                  }
                   // stream the response
                   const audioBuffer = await new Response(
                     elevenlabsBody,

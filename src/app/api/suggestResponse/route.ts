@@ -26,10 +26,10 @@ export async function POST(request: NextRequest) {
       },
       take: 6, // Only get the last 6 messages
     });
-    
+
     // Convert the messages into a format that OpenAI can understand
     const currentConversation = planetscaleResponse
-    // reverse the order of the messages
+      // reverse the order of the messages
       .reverse()
       .map(({ type, content }) => {
         const role = type === "human" ? "user" : "assistant";

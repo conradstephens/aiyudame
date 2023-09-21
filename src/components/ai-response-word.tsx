@@ -75,7 +75,7 @@ export default function AiResponseWord(props: ComponentProps) {
   return (
     <Popover>
       <PopoverTrigger
-        className="text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50 p-1 text-2xl"
+        className="text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-50 p-1 text-xl inline-block"
         onClick={getExplanation}
       >
         {word}

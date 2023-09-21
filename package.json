@@ -9,7 +9,8 @@
     "lint": "next lint",
     "format": "npx prettier . --write",
     "postinstall": "prisma generate",
-    "prisma:push": "prisma db push"
+    "prisma:push": "prisma db push",
+    "prisma:generate": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.1",
@@ -38,7 +39,6 @@
     "framer-motion": "^10.16.4",
     "idb-keyval": "^6.2.1",
     "jotai": "^2.4.2",
-    "langchain": "^0.0.141",
     "lucide-react": "^0.274.0",
     "nanoid": "^4.0.2",
     "next": "13.4.19",

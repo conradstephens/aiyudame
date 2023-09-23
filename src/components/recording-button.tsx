@@ -166,9 +166,18 @@ export default function RecordingButton(props: ComponentProps) {
                           "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                          sessionId,
-                          humanResponse,
-                          aiResponse,
+                          data: [
+                            {
+                              session_id: sessionId,
+                              type: "human",
+                              content: humanResponse,
+                            },
+                            {
+                              session_id: sessionId,
+                              type: "ai",
+                              content: aiResponse,
+                            },
+                          ],
                         }),
                       });
 

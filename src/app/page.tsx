@@ -69,8 +69,6 @@ export default function Home() {
         "previousResponse",
         "hasFinishedAiResponseJoyride",
       ]);
-      setIsReturningUser(!!isReturningUser);
-      setShowAiResponseJoyRide(!hasFinishedAiResponseJoyride);
       if (settings) {
         methods.setValue("language", settings.language);
       }
@@ -81,6 +79,8 @@ export default function Home() {
           words: previousResponse.split(" "),
         });
       }
+      setIsReturningUser(!!isReturningUser);
+      setShowAiResponseJoyRide(!hasFinishedAiResponseJoyride);
       // if session id is not present, create a new session id
       if (!session) {
         await createSession();
@@ -104,6 +104,82 @@ export default function Home() {
     };
     retrieveSession();
   }, []);
+
+  // function for ai to greet the user
+  const handleAiGreetings = async () => {
+    try {
+      const opeanAiChatRes = await fetch("/api/chatCompletion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: "Greet yourself with your name!",
+          sessionId,
+          language,
+        }),
+      });
+
+      if (!opeanAiChatRes.ok) {
+        throw new Error("Error generating openai response");
+      }
+
+      const body = opeanAiChatRes.body;
+
+      if (!body) {
+        return;
+      }
+      const openAiReader = body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let text = "";
+      while (!done) {
+        const { value, done: doneReading } = await openAiReader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value);
+        setResponse((prev) => {
+          const newText = prev.text + chunkValue;
+          return {
+            words: prev.text.split(" "),
+            text: newText,
+          };
+        });
+        text += chunkValue;
+      }
+      await set("previousResponse", text);
+      // save the response to db
+      const res = await fetch("/api/storeNewChats", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: [
+            {
+              session_id: sessionId,
+              type: "ai",
+              content: text,
+            },
+          ],
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("Error storing chats");
+        const data = await res.json();
+        console.error(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // if the user is returning, and there is no text, then we need to generate an intro
+  useEffect(() => {
+    if (isReturningUser && !text) {
+      handleAiGreetings();
+    }
+  }, [isReturningUser]);
 
   const handleShowJoyride = () => {
     setShowJoyride(true);
@@ -136,7 +212,8 @@ export default function Home() {
   //   return () => clearTimeout(timer);
   // }, [text]);
 
-  if (!sessionId) {
+  // if no session id or no text, show loading
+  if (!sessionId || (!text.length && isReturningUser)) {
     return (
       <div className="flex justify-center h-screen items-center zinc">
         <Loader2 className="h-14 w-14 animate-spin" />
@@ -183,12 +260,15 @@ export default function Home() {
           <>
             <div className="w-full flex flex-col text-center justify-center items-center h-full gap-10">
               <div className="max-h-[50%] overflow-y-auto">
-                {language === "es" &&
+                {language === "es" && words.length > 0 ? (
                   words.map((word, index) => (
                     <span key={index} className={`word-${index}`}>
                       <AiResponseWord word={word} context={text} />
                     </span>
-                  ))}
+                  ))
+                ) : (
+                  <>{text}</>
+                )}
               </div>
               <div className="flex flex-col gap-3 w-full items-center">
                 <RecordingButton language={language} />

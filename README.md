@@ -9,7 +9,6 @@
 - **[ElevenLabs](https://docs.elevenlabs.io/welcome/introduction):** Generative AI text to speech and voice cloning.
 - **[Shadcn/ui](https://ui.shadcn.com/):** Beautifully designed components that you can copy and paste into your apps. Accessible. Customizable. Open Source.
 - **[Planetscale](https://planetscale.com):** A cloud-native database platform designed to help organizations manage and scale their databases easily and efficiently.
-- **[Langchain](https://langchain.com):** A framework for developing applications powered by language models.
 - **[Jotai](https://jotai.org/):** Primitive and flexible state management for React.
 
 ## Getting Started 🚀

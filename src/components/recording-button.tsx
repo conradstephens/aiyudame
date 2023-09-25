@@ -200,6 +200,11 @@ export default function RecordingButton(props: ComponentProps) {
                         modelId = "eleven_multilingual_v2";
                         voiceId = "N4Jse6hDfsD4Iqv16pxy";
                       }
+
+                      if (language === "it") {
+                        modelId = "eleven_multilingual_v2";
+                        voiceId = "N4Jse6hDfsD4Iqv16pxy";
+                      }
                       // generate audio from openai response
                       const response = await fetch(
                         `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,

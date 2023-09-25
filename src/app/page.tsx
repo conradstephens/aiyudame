@@ -260,7 +260,8 @@ export default function Home() {
           <>
             <div className="w-full flex flex-col text-center justify-center items-center h-full gap-10">
               <div className="max-h-[50%] overflow-y-auto">
-                {language === "es" && words.length > 0 ? (
+                {(language === "es" || language === "it") &&
+                words.length > 0 ? (
                   words.map((word, index) => (
                     <span key={index} className={`word-${index}`}>
                       <AiResponseWord word={word} context={text} />

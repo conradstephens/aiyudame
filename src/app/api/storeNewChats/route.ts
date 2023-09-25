@@ -10,10 +10,10 @@ export async function POST(request: NextRequest) {
   const req: RequestBody = await request.json();
 
   const data = req.data;
-  
+
   data.forEach(({ type, content }) => {
     console.log(`${type} => ${content}`);
-  })
+  });
 
   // Save the conversation to the database
   await prisma.conversation_history.createMany({

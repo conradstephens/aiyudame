@@ -2,7 +2,7 @@
 
 import ThemeToggle from "@/components/theme-toggle";
 import React, { useEffect } from "react";
-import { set, del, getMany, setMany } from "idb-keyval";
+import { set, del, getMany, setMany, get } from "idb-keyval";
 import { FormProvider, useForm } from "react-hook-form";
 import LanguageSelect from "@/components/language-select";
 import { nanoid } from "nanoid";
@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import clsx from "clsx";
 import GuidedTour from "@/components/guided-tour";
 import AiResponseGuidedTour from "@/components/ai-response-guided-tour";
+import { storeResponse } from "@/constants/language";
+import { Skeleton } from "@/components/ui/skeleton";
 // import SuggestResponsePopover from "@/components/suggest-response-popover";
 
 export default function Home() {
@@ -30,6 +32,8 @@ export default function Home() {
   const [showJoyride, setShowJoyride] = useAtom(showJoyRideAtom);
   const setShowAiResponseJoyRide = useSetAtom(showAiResponseJoyRideAtom);
   const [isReturningUser, setIsReturningUser] = useAtom(isReturningUserAtom);
+
+  const isNewUser = !isReturningUser && !showJoyride;
   // const { recording } = useAtomValue(recordingAtom);
   // const [showSuggestionButton, setShowSuggestionButton] = React.useState(false);
   const methods = useForm({
@@ -39,15 +43,52 @@ export default function Home() {
   });
 
   const language = methods.watch("language");
+  const handleLanguageUpdate = async () => {
+    // get the first 21 out of 24 characters of the session id
+    // always adding a "-" and the language code to the end of the session id
+    // TODO: improve this logic once the app gains more users
+    if (!sessionId) {
+      return;
+    }
+    const updatedSessionId = `${sessionId.slice(0, 21)}-${language}`;
+    setSessionId(updatedSessionId);
+    let previousResponse: string | undefined;
+    switch (language) {
+      case "it":
+        previousResponse = await get("previousItalianResponse");
+        break;
+      case "en":
+        previousResponse = await get("previousEnglishResponse");
+        break;
+      default:
+        previousResponse = await get("previousSpanishResponse");
+        break;
+    }
+    if (!isNewUser) {
+      if (previousResponse) {
+        const text = previousResponse;
+        const words = previousResponse.length
+          ? previousResponse.split(" ")
+          : [];
+        setResponse({ text, words });
+      } else {
+        setResponse({ text: "", words: [] });
+        handleAiGreetings(updatedSessionId);
+      }
+    }
+  };
+  // update session id when language changes
+  useEffect(() => {
+    handleLanguageUpdate();
+  }, [language]);
 
   const createSession = async () => {
     const id = nanoid();
-
     await set("session", {
       sessionId: id,
       createdAt: new Date().toLocaleString(),
     });
-    setSessionId(id);
+    setSessionId(`${id}-${language}`);
     // clear the previous response
     await del("previousResponse");
   };
@@ -56,28 +97,52 @@ export default function Home() {
     const retrieveSession = async () => {
       // get the settings
       // get the conversation session id
+      const store = await getMany([
+        "isReturningUser",
+        "settings",
+        "session",
+        "previousItalianResponse",
+        "previousSpanishResponse",
+        "previousEnglishResponse",
+        "hasFinishedAiResponseJoyride",
+      ]);
       const [
         isReturningUser,
         settings,
         session,
-        previousResponse,
+        previousItalianResponse,
+        previousSpanishResponse,
+        previousEnglishResponse,
         hasFinishedAiResponseJoyride,
-      ] = await getMany([
-        "isReturningUser",
-        "settings",
-        "session",
-        "previousResponse",
-        "hasFinishedAiResponseJoyride",
-      ]);
-      if (settings) {
-        methods.setValue("language", settings.language);
-      }
+      ] = store;
+      const previousUsedLanguage = settings?.language ?? "es";
+      methods.setValue("language", previousUsedLanguage);
       // restore the last thing the ai said
-      if (previousResponse) {
-        setResponse({
-          text: previousResponse,
-          words: previousResponse.split(" "),
-        });
+      switch (previousUsedLanguage) {
+        case "it":
+          if (previousItalianResponse) {
+            setResponse({
+              text: previousItalianResponse,
+              words: previousItalianResponse.split(" "),
+            });
+          }
+          break;
+        case "en":
+          if (previousEnglishResponse) {
+            setResponse({
+              text: previousEnglishResponse,
+              words: previousEnglishResponse.split(" "),
+            });
+          }
+          break;
+        default:
+          if (previousSpanishResponse) {
+            setResponse({
+              text: previousSpanishResponse,
+              words: previousSpanishResponse.split(" "),
+            });
+          }
+          break;
       }
       setIsReturningUser(!!isReturningUser);
       setShowAiResponseJoyRide(!hasFinishedAiResponseJoyride);
@@ -100,14 +165,15 @@ export default function Home() {
         return;
       }
       // if session id is present and not expired, use the session id
-      setSessionId(id);
+      setSessionId(`${id}-${previousUsedLanguage}`);
     };
     retrieveSession();
   }, []);
 
   // function for ai to greet the user
-  const handleAiGreetings = async () => {
+  const handleAiGreetings = async (updatedSessionId?: string) => {
     try {
+      const currentSessionId = updatedSessionId ?? sessionId;
       const opeanAiChatRes = await fetch("/api/chatCompletion", {
         method: "POST",
         headers: {
@@ -115,7 +181,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           content: "Greet yourself with your name!",
-          sessionId,
+          sessionId: currentSessionId,
           language,
         }),
       });
@@ -140,13 +206,13 @@ export default function Home() {
         setResponse((prev) => {
           const newText = prev.text + chunkValue;
           return {
-            words: prev.text.split(" "),
+            words: newText.split(" "),
             text: newText,
           };
         });
         text += chunkValue;
       }
-      await set("previousResponse", text);
+      await storeResponse(language, text);
       // save the response to db
       const res = await fetch("/api/storeNewChats", {
         method: "POST",
@@ -156,7 +222,7 @@ export default function Home() {
         body: JSON.stringify({
           data: [
             {
-              session_id: sessionId,
+              session_id: currentSessionId,
               type: "ai",
               content: text,
             },
@@ -212,8 +278,8 @@ export default function Home() {
   //   return () => clearTimeout(timer);
   // }, [text]);
 
-  // if no session id or no text, show loading
-  if (!sessionId || (!text.length && isReturningUser)) {
+  // if no session id show loading
+  if (!sessionId) {
     return (
       <div className="flex justify-center h-screen items-center zinc">
         <Loader2 className="h-14 w-14 animate-spin" />
@@ -227,7 +293,7 @@ export default function Home() {
         <div
           className={clsx(
             "flex justify-between flex-row",
-            !isReturningUser && !showJoyride && "flex-row-reverse",
+            isNewUser && "flex-row-reverse",
           )}
         >
           {(isReturningUser || showJoyride) && (
@@ -237,7 +303,7 @@ export default function Home() {
           )}
           <ThemeToggle />
         </div>
-        {!isReturningUser && !showJoyride ? (
+        {isNewUser ? (
           // show welcome screen
           <div className="flex flex-col items-center gap-10 justify-center h-full text-center">
             <div className="flex flex-col gap-5">
@@ -260,14 +326,20 @@ export default function Home() {
           <>
             <div className="w-full flex flex-col text-center justify-center items-center h-full gap-10">
               <div className="max-h-[50%] overflow-y-auto">
-                {language === "es" && words.length > 0 ? (
+                {words.length > 0 ? (
                   words.map((word, index) => (
                     <span key={index} className={`word-${index}`}>
-                      <AiResponseWord word={word} context={text} />
+                      <AiResponseWord
+                        word={word}
+                        context={text}
+                        language={language}
+                      />
                     </span>
                   ))
                 ) : (
-                  <>{text}</>
+                  <>
+                    <Skeleton className="w-96 h-10" />
+                  </>
                 )}
               </div>
               <div className="flex flex-col gap-3 w-full items-center">

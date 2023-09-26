@@ -36,8 +36,8 @@ export default function LanguageSelect() {
                 <SelectContent>
                   <SelectGroup>
                     <SelectLabel>Language</SelectLabel>
-                    <SelectItem value="en">English</SelectItem>
                     <SelectItem value="es">Spanish</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
                     <SelectItem value="it">Italian</SelectItem>
                   </SelectGroup>
                 </SelectContent>

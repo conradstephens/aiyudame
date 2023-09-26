@@ -11,6 +11,18 @@ export async function POST(request: NextRequest) {
 
   const word = req.word;
   const context = req.context;
+  let language: string;
+  switch (req.language) {
+    case "en":
+      language = "english";
+      break;
+    case "it":
+      language = "italian";
+      break;
+    default:
+      language = "spanish";
+      break;
+  }
 
   try {
     const explanation = await openai.chat.completions.create({
@@ -24,7 +36,7 @@ export async function POST(request: NextRequest) {
         },
         {
           role: "user",
-          content: `What does '${word}' mean in spanish in the context of '${context}' ?`,
+          content: `What does '${word}' mean in ${language} in the context of '${context}' ?`,
         },
       ],
       stream: true,

@@ -8,6 +8,7 @@ const badText = [
   "Subtítulos realizados por la comunidad de Amara.org", // spanish transcription
   "you", // english transcription
   "",
+  "Sottotitoli creati dalla comunità Amara.org", // italian transcription
 ];
 
 // This function handles POST requests to the /api/speechToText route

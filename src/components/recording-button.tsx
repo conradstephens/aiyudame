@@ -11,9 +11,9 @@ import {
   sessionIdAtom,
   showJoyRideAtom,
 } from "@/atoms";
-import { set } from "idb-keyval";
 import { Button } from "./ui/button";
 import { isAppleEnvironment } from "@/lib/utils";
+import { storeResponse } from "@/constants/language";
 
 interface ComponentProps {
   language: string;
@@ -196,12 +196,7 @@ export default function RecordingButton(props: ComponentProps) {
                       let modelId = "eleven_monolingual_v1";
                       let voiceId = "7arsGG6R4puBzDqYy6xu";
 
-                      if (language === "es") {
-                        modelId = "eleven_multilingual_v2";
-                        voiceId = "N4Jse6hDfsD4Iqv16pxy";
-                      }
-
-                      if (language === "it") {
+                      if (language === "es" || language === "it") {
                         modelId = "eleven_multilingual_v2";
                         voiceId = "N4Jse6hDfsD4Iqv16pxy";
                       }
@@ -253,7 +248,7 @@ export default function RecordingButton(props: ComponentProps) {
                     audioSource.buffer = buffer;
                     audioSource.connect(audioContext.destination);
                     //  store the response in local storage
-                    await set("previousResponse", aiResponse);
+                    await storeResponse(language, aiResponse);
                     // set text
                     const words = aiResponse.split(" ");
 

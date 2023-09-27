@@ -9,14 +9,16 @@ import { JotaiProvider } from "@/providers/jotai-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 const APP_NAME = "AIyudame";
-const APP_DESCRIPTION =
-  "A web application that utilizes AI chatbot technology to help people improve their Spanish-speaking skills.";
+const APP_DESCRIPTION = "";
 
 export const metadata: Metadata = {
   title: APP_NAME,
   description: APP_DESCRIPTION,
   manifest: "/manifest.json",
-  viewport: "width=device-width, initial-scale=1",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+  },
   icons: ["/favicon.ico"],
   themeColor: "#ffffff",
 };
@@ -27,8 +29,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning lang="en">
-      <body suppressHydrationWarning className={inter.className}>
+    <html suppressHydrationWarning lang="en" className={inter.className}>
+      <body suppressHydrationWarning>
         <JotaiProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             {children}

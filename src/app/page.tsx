@@ -11,7 +11,6 @@ import { useAtom, useSetAtom } from "jotai";
 import {
   aiTextResponseAtom,
   isReturningUserAtom,
-  // recordingAtom,
   sessionIdAtom,
   showAiResponseJoyRideAtom,
   showJoyRideAtom,
@@ -24,7 +23,6 @@ import GuidedTour from "@/components/guided-tour";
 import AiResponseGuidedTour from "@/components/ai-response-guided-tour";
 import { storeResponse } from "@/constants/language";
 import { Skeleton } from "@/components/ui/skeleton";
-// import SuggestResponsePopover from "@/components/suggest-response-popover";
 
 export default function Home() {
   const [sessionId, setSessionId] = useAtom(sessionIdAtom);
@@ -34,8 +32,7 @@ export default function Home() {
   const [isReturningUser, setIsReturningUser] = useAtom(isReturningUserAtom);
 
   const isNewUser = !isReturningUser && !showJoyride;
-  // const { recording } = useAtomValue(recordingAtom);
-  // const [showSuggestionButton, setShowSuggestionButton] = React.useState(false);
+
   const methods = useForm({
     defaultValues: {
       language: "es",
@@ -171,9 +168,8 @@ export default function Home() {
   }, []);
 
   // function for ai to greet the user
-  const handleAiGreetings = async (updatedSessionId?: string) => {
+  const handleAiGreetings = async (currentSessionId: string) => {
     try {
-      const currentSessionId = updatedSessionId ?? sessionId;
       const opeanAiChatRes = await fetch("/api/chatCompletion", {
         method: "POST",
         headers: {
@@ -242,10 +238,10 @@ export default function Home() {
 
   // if the user is returning, and there is no text, then we need to generate an intro
   useEffect(() => {
-    if (isReturningUser && !text) {
-      handleAiGreetings();
+    if (isReturningUser && sessionId && !text) {
+      handleAiGreetings(sessionId);
     }
-  }, [isReturningUser]);
+  }, [sessionId, isReturningUser]);
 
   const handleShowJoyride = () => {
     setShowJoyride(true);
@@ -261,22 +257,6 @@ export default function Home() {
     setShowJoyride(false);
     setShowAiResponseJoyRide(false);
   };
-
-  // useEffect(() => {
-  //   if (recording) {
-  //     setShowSuggestionButton(false);
-  //   }
-  // }, [recording]);
-
-  // useEffect(() => {
-  //   let timer: NodeJS.Timeout;
-  //   if (text.length) {
-  //     timer = setTimeout(() => {
-  //       setShowSuggestionButton(true);
-  //     }, 5000);
-  //   }
-  //   return () => clearTimeout(timer);
-  // }, [text]);
 
   // if no session id show loading
   if (!sessionId) {
@@ -344,9 +324,6 @@ export default function Home() {
               </div>
               <div className="flex flex-col gap-3 w-full items-center">
                 <RecordingButton language={language} />
-                {/* {(showSuggestionButton || showJoyride) && (
-                  <SuggestResponsePopover context={text} />
-                )} */}
               </div>
             </div>
             {!isReturningUser && <GuidedTour />}

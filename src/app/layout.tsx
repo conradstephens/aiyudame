@@ -9,7 +9,8 @@ import { JotaiProvider } from "@/providers/jotai-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 const APP_NAME = "AIyudame";
-const APP_DESCRIPTION = "";
+const APP_DESCRIPTION =
+  "A web application that utilizes AI chatbot technology to help people improve their Spanish-speaking skills.";
 
 export const metadata: Metadata = {
   title: APP_NAME,

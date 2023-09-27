@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   aiTextResponseAtom,
-  recordingAtom,
+  recorderAtom,
   sessionIdAtom,
   showJoyRideAtom,
 } from "@/atoms";
@@ -24,8 +24,8 @@ export default function RecordingButton(props: ComponentProps) {
   const sessionId = useAtomValue(sessionIdAtom);
   const showJoyride = useAtomValue(showJoyRideAtom);
   const [playingResponse, setPlayingResponse] = useState(false);
-  const [{ recording, recordingText, shouldUpdateText }, setRecordingState] =
-    useAtom(recordingAtom);
+  const [{ isRecording, status, shouldUpdateText }, setRecordingState] =
+    useAtom(recorderAtom);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
@@ -287,7 +287,7 @@ export default function RecordingButton(props: ComponentProps) {
     setRecordingState((prev) => {
       return {
         ...prev,
-        recording: true,
+        isRecording: true,
       };
     });
     if (mediaRecorder) {
@@ -299,7 +299,7 @@ export default function RecordingButton(props: ComponentProps) {
     setRecordingState((prev) => {
       return {
         ...prev,
-        recording: false,
+        isRecording: false,
       };
     });
     if (mediaRecorder) {
@@ -319,8 +319,8 @@ export default function RecordingButton(props: ComponentProps) {
       setRecordingState((prev) => {
         return {
           ...prev,
-          recordingText:
-            prev.recordingText === "Click to stop recording"
+          status:
+            prev.status === "Click to stop recording"
               ? "Recording in progress..."
               : "Click to stop recording",
         };
@@ -357,13 +357,7 @@ export default function RecordingButton(props: ComponentProps) {
         </div>
       ) : (
         <div className="text-md w-full relative">
-          {/* <div className="relative mr-4">
-            <div className="h-4 w-4 rounded-[4px] bg-zinc-950" />
-            <div className="absolute top-1/2 left-1/2 translate-x-[-50%] translate-y-[-50%]">
-            <Loader2 className="h-10 w-10 animate-spin text-zinc-950" />
-            </div>
-          </div> */}
-          {recording ? (
+          {isRecording ? (
             <Button onClick={stopRecording} className="w-56">
               <LazyMotion features={domAnimation}>
                 <m.div
@@ -377,7 +371,7 @@ export default function RecordingButton(props: ComponentProps) {
                   animate={{ opacity: 0 }}
                   onUpdate={onUpdateFrame}
                 >
-                  {recordingText}
+                  {status}
                 </m.div>
               </LazyMotion>
             </Button>

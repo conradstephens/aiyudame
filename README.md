@@ -25,6 +25,8 @@ cd aiyudame
 2. **Install Dependencies:** Use npm or yarn to install the required dependencies.
 
 ```
+bun install
+# or
 npm install
 # or
 yarn install
@@ -66,6 +68,8 @@ DATABASE_URL=your_planetscale_url
 - Run the following command to generate the prisma typings.
 
 ```
+bun run postinstall
+# or
 npm run postinstall
 # or
 yarn postinstall
@@ -74,6 +78,8 @@ yarn postinstall
 - Run the following command to push the pre-defined table to the database.
 
 ```
+bun run prisma:push
+# or
 npm run prisma:push
 # or
 yarn prisma:push
@@ -82,6 +88,8 @@ yarn prisma:push
 7. **Run the App:** Start the development server to run the app locally.
 
 ```
+bun dev
+# or
 npm run dev
 # or
 yarn dev

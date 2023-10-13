@@ -48,9 +48,6 @@ export async function POST(request: NextRequest) {
       const role = type === "human" ? "user" : "assistant";
       return { role, content } as ChatCompletionMessageParam;
     });
-    console.log("systemPrompt => ", systemPrompt);
-    console.log("currentConversation => ", currentConversation);
-    console.log("content => ", content);
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo-16k",
       temperature: 0.7,

@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/toaster";
 import { JotaiProvider } from "@/providers/jotai-provider";
+import Reroute from "@/components/reroute";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,9 +34,11 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <JotaiProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
-            <Toaster />
-            <Analytics />
+            <Reroute>
+              {children}
+              <Toaster />
+              <Analytics />
+            </Reroute>
           </ThemeProvider>
         </JotaiProvider>
       </body>

@@ -32,6 +32,7 @@
     "clsx": "^2.0.0",
     "dayjs": "^1.11.9",
     "framer-motion": "^10.16.4",
+    "hark": "^1.2.3",
     "idb-keyval": "^6.2.1",
     "jotai": "^2.4.2",
     "lucide-react": "^0.274.0",
@@ -47,9 +48,11 @@
     "tailwind-merge": "^1.14.0",
     "tailwindcss": "^3.3.3",
     "tailwindcss-animate": "^1.0.7",
+    "translate": "^2.0.2",
     "zod": "^3.22.2"
   },
   "devDependencies": {
+    "@types/hark": "^1.2.3",
     "@types/node": "20.5.9",
     "@types/react": "18.2.21",
     "@types/react-dom": "18.2.7",

@@ -192,14 +192,14 @@ export default function RecordingButton(props: ComponentProps) {
           text: chunkValue,
           try_trigger_generation: true,
         };
-        aiResponse += chunkValue;
         socket.send(JSON.stringify(textMessage));
+        aiResponse += chunkValue;
+
+        const words = aiResponse.split(" ");
+        setAiTextResponse({ text: aiResponse, words });
       }
       //  store the response in local storage
       await storeResponse(language, aiResponse);
-      // set text
-      const words = aiResponse.split(" ");
-      setAiTextResponse({ text: aiResponse, words });
 
       // 4. Send the EOS message with an empty string
       const eosMessage = {

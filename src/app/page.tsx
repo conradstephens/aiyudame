@@ -322,9 +322,8 @@ export default function Home() {
                   </>
                 )}
               </div>
-              <div className="flex flex-col gap-3 w-full items-center">
-                <RecordingButton language={language} />
-              </div>
+
+              <RecordingButton language={language} />
             </div>
             {!isReturningUser && <GuidedTour />}
             {!!words.length && <AiResponseGuidedTour />}

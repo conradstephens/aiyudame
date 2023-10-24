@@ -46,23 +46,15 @@ export default function RecordingButton(props: ComponentProps) {
   };
 
   // transcribe user input into text
-  const handleTransciption = async (reader: FileReader) => {
-    if (typeof reader.result !== "string") {
-      stopLoading();
-      throw new Error("Unexpected result type");
-    }
+  const handleTransciption = async (blob: Blob) => {
+    const formData = new FormData();
+    formData.append("audioBlob", blob);
+    formData.append("language", language);
+    formData.append("sessionId", sessionId ?? "");
     // transcribe audio and begin conversation with openai
-    const base64Audio = reader.result.split(",")[1]; // Remove the data URL prefix
     const response = await fetch("/api/speechToText", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        audio: base64Audio,
-        sessionId,
-        language,
-      }),
+      body: formData,
     });
 
     const data = await response.json();
@@ -159,9 +151,9 @@ export default function RecordingButton(props: ComponentProps) {
       setPlayingResponse(true);
     });
 
-    audio.addEventListener("waiting", () => {
-      console.log("waiting for audio to load");
-    });
+    // audio.addEventListener("waiting", () => {
+    //   console.log("waiting for audio to load");
+    // });
 
     audio.addEventListener("ended", () => {
       console.log("audio ended");
@@ -319,39 +311,30 @@ export default function RecordingButton(props: ComponentProps) {
         // if polyfill is loaded, use wav format
         const fileType = isPolyfillLoaded ? "audio/mpeg" : "audio/webm";
         const audioBlob = new Blob(chunks, { type: fileType });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-        audio.onerror = (err) => {
-          console.error("Error playing audio:", err);
-          stopLoading();
-        };
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = async function () {
-          try {
-            // transcribe audio
-            const humanResponse = await handleTransciption(reader);
 
-            // generate response
-            const body = await handleChatCompletion(humanResponse);
+        try {
+          // transcribe audio
+          const humanResponse = await handleTransciption(audioBlob);
 
-            if (!body) {
-              return;
-            }
+          // generate response
+          const body = await handleChatCompletion(humanResponse);
 
-            // establish socket connection
-            const aiResponse = establishSocketConnection(body);
-
-            await storeConversation(humanResponse, aiResponse);
-          } catch (error: any) {
-            console.error(error);
-            stopLoading();
-            toast({
-              description: error.message,
-              variant: "destructive",
-            });
+          if (!body) {
+            return;
           }
-        };
+
+          // establish socket connection
+          const aiResponse = establishSocketConnection(body);
+
+          await storeConversation(humanResponse, aiResponse);
+        } catch (error: any) {
+          console.error(error);
+          stopLoading();
+          toast({
+            description: error.message,
+            variant: "destructive",
+          });
+        }
       });
 
       newMediaRecorder.addEventListener("error", (err) => {

@@ -1,6 +1,6 @@
 // Import necessary libraries
-import { OpenAI } from "openai";
 import fs from "fs";
+import { OpenAI } from "openai";
 
 const openai = new OpenAI();
 
@@ -9,16 +9,16 @@ const openai = new OpenAI();
  * @param audioData string | NodeJS.ArrayBufferView
  * @returns string
  */
-export async function convertAudioToText(audioData: Buffer, language: string) {
-  //  Write the audio data to a file
-  const inputPath = "/tmp/input.webm";
-  fs.writeFileSync(inputPath, audioData);
+export async function convertAudioToText(file: File, language: string) {
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
 
-  // Create a read stream from the file
-  const file = fs.createReadStream(inputPath);
-  // Transcribe the audio
+  // Create a temporary file to store the audio data
+  const inputPath = "/tmp/input.webm";
+  fs.writeFileSync(inputPath, buffer);
+
   const response = await openai.audio.transcriptions.create({
-    file,
+    file: fs.createReadStream(inputPath),
     model: "whisper-1",
     language,
   });

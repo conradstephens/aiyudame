@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
 import { convertAudioToText } from "@/speech-to-text";
 import "dayjs/locale/es";
+import { NextRequest, NextResponse } from "next/server";
 
 // Text that gets transcribed when there is nobody speaking in the audio
 // help reduce hallucination
@@ -13,19 +13,21 @@ const badText = [
 
 // This function handles POST requests to the /api/speechToText route
 export async function POST(request: NextRequest) {
-  // Parse the request body
-  const req = await request.json();
-  // Extract the audio data from the request body
-  const base64Audio = req.audio;
-  const sessionId = req.sessionId;
-  const language = req.language;
+  const formData = await request.formData();
+  const sessionId = formData.get("sessionId");
+  const language = formData.get("language");
+  const file = formData.get("audioBlob");
 
-  console.log("sessionId", sessionId);
-  // Convert the Base64 audio data back to a Buffer
-  const audio = Buffer.from(base64Audio, "base64");
+  if (!sessionId || !language || !file) {
+    return NextResponse.json({ error: "Missing data" }, { status: 500 });
+  }
+
   try {
     // Convert the audio data to text
-    const transcribedText = await convertAudioToText(audio, language);
+    const transcribedText = await convertAudioToText(
+      file as File,
+      language as string,
+    );
 
     // If the audio is empty, return an error
     if (badText.some((bad) => transcribedText === bad)) {

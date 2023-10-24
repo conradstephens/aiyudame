@@ -48,3 +48,21 @@
     --ring: 240 4.9% 83.9%;
   }
 }
+
+.recording-button {
+  @apply h-9 w-9 border-0 rounded-full outline-none cursor-pointer
+}
+
+/* remove blue highlight on mobile  */
+.no-select {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.no-select:focus {
+  outline: none !important;
+}

@@ -7,9 +7,9 @@ import {
 } from "@/components/ui/popover";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { useToast } from "./ui/use-toast";
-import clsx from "clsx";
 
 interface ComponentProps {
   word: string;

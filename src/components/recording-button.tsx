@@ -30,6 +30,7 @@ export default function RecordingButton(props: ComponentProps) {
     null,
   );
   const [loading, setLoading] = useState(false);
+  const [isPolyfillLoaded, setIsPolyfillLoaded] = useState(false);
 
   const { toast } = useToast();
 
@@ -42,17 +43,6 @@ export default function RecordingButton(props: ComponentProps) {
   const stopLoading = () => {
     setPlayingResponse(false);
     setLoading(false);
-  };
-
-  const loadPolyfill = async () => {
-    if (isAppleEnvironment()) {
-      //? mobile iOS devices and Safari on mac creates a weird file format that is not supported by openai
-      //? so we use a polyfill that creates a support file format when recording is
-      const AudioRecorder = (await import("audio-recorder-polyfill")).default;
-      console.log("loaded polyfill");
-      window.MediaRecorder = AudioRecorder;
-      return true;
-    }
   };
 
   // transcribe user input into text
@@ -161,11 +151,21 @@ export default function RecordingButton(props: ComponentProps) {
     // create media source to play audio
     const mediaSource = new MediaSource();
     const audio = new Audio();
-    audio.autoplay = true;
+    audio.controls = true;
     audio.src = URL.createObjectURL(mediaSource);
+    audio.play();
 
     audio.addEventListener("playing", () => {
       setPlayingResponse(true);
+    });
+
+    audio.addEventListener("waiting", () => {
+      console.log("waiting for audio to load");
+    });
+
+    audio.addEventListener("ended", () => {
+      console.log("audio ended");
+      stopLoading();
     });
 
     let aiResponse = "";
@@ -243,7 +243,6 @@ export default function RecordingButton(props: ComponentProps) {
         const nextChunk = audioChunksQueue.shift(); // take the next chunk from the queue
         if (!nextChunk) return;
         sourceBuffer.appendBuffer(nextChunk); // append it
-        audio.play();
       });
 
       // 2. Handling WebSocket Messages
@@ -274,11 +273,27 @@ export default function RecordingButton(props: ComponentProps) {
     return aiResponse;
   };
 
+  // load polyfill for safari and iOS devices
   useEffect(() => {
-    if (!mediaRecorder || !isRecording) {
-      return;
-    }
-  }, [mediaRecorder, isRecording]);
+    const loadPolyfill = async () => {
+      if (isAppleEnvironment()) {
+        //? mobile iOS devices and Safari on mac creates a weird file format that is not supported by openai
+        //? so we use a polyfill that creates a support file format when recording is
+        const AudioRecorder = (await import("audio-recorder-polyfill")).default;
+
+        const mpegEncoder = // @ts-ignore
+          (await import("audio-recorder-polyfill/mpeg-encoder")).default;
+        AudioRecorder.encoder = mpegEncoder;
+
+        // user mpeg encoder for better compression
+        AudioRecorder.prototype.mimeType = "audio/mpeg";
+        window.MediaRecorder = AudioRecorder;
+        setIsPolyfillLoaded(true);
+        console.log("loaded polyfill");
+      }
+    };
+    loadPolyfill();
+  }, []);
 
   const initalizeMediaRecorder = async () => {
     if (!sessionId || showJoyride) {
@@ -287,9 +302,6 @@ export default function RecordingButton(props: ComponentProps) {
     try {
       console.log("setting up media recorder");
       let chunks: Blob[] = [];
-      // load the polyfill if the browser is safari
-      const isPolyfillLoaded = await loadPolyfill();
-
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
@@ -305,7 +317,7 @@ export default function RecordingButton(props: ComponentProps) {
       newMediaRecorder.addEventListener("stop", async () => {
         startLoading();
         // if polyfill is loaded, use wav format
-        const fileType = isPolyfillLoaded ? "audio/wav" : "audio/webm";
+        const fileType = isPolyfillLoaded ? "audio/mpeg" : "audio/webm";
         const audioBlob = new Blob(chunks, { type: fileType });
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
@@ -351,13 +363,13 @@ export default function RecordingButton(props: ComponentProps) {
         });
       });
       setMediaRecorder(newMediaRecorder);
+      newMediaRecorder.start();
       setRecordingState((prevState) => {
         return {
           ...prevState,
           isRecording: true,
         };
       });
-      newMediaRecorder.start();
     } catch (error) {
       console.error(error);
       stopLoading();
@@ -469,7 +481,7 @@ export default function RecordingButton(props: ComponentProps) {
       const sum = frequencyData.reduce((a, b) => a + b, 0);
       const avg = sum / frequencyData.length;
       const baseRadius = Math.min(canvas.width, canvas.height) / 56;
-      const multiplier = isRecording ? 0.4 : 0; // Adjust multiplier to achieve desired effect
+      const multiplier = isRecording ? 0.5 : 0; // Adjust multiplier to achieve desired effect
       const radius = baseRadius + avg * multiplier;
 
       ctx.beginPath();

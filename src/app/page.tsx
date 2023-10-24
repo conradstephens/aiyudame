@@ -1,13 +1,5 @@
 "use client";
 
-import ThemeToggle from "@/components/theme-toggle";
-import React, { useEffect } from "react";
-import { set, del, getMany, setMany, get } from "idb-keyval";
-import { FormProvider, useForm } from "react-hook-form";
-import LanguageSelect from "@/components/language-select";
-import { nanoid } from "nanoid";
-import RecordingButton from "@/components/recording-button";
-import { useAtom, useSetAtom } from "jotai";
 import {
   aiTextResponseAtom,
   isReturningUserAtom,
@@ -15,14 +7,22 @@ import {
   showAiResponseJoyRideAtom,
   showJoyRideAtom,
 } from "@/atoms";
-import AiResponseWord from "@/components/ai-response-word";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import clsx from "clsx";
-import GuidedTour from "@/components/guided-tour";
 import AiResponseGuidedTour from "@/components/ai-response-guided-tour";
-import { storeResponse } from "@/constants/language";
+import AiResponseWord from "@/components/ai-response-word";
+import GuidedTour from "@/components/guided-tour";
+import LanguageSelect from "@/components/language-select";
+import RecordingButton from "@/components/recording-button";
+import ThemeToggle from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { storeResponse } from "@/constants/language";
+import clsx from "clsx";
+import { del, get, getMany, set, setMany } from "idb-keyval";
+import { useAtom, useSetAtom } from "jotai";
+import { Loader2 } from "lucide-react";
+import { nanoid } from "nanoid";
+import { useEffect } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 
 export default function Home() {
   const [sessionId, setSessionId] = useAtom(sessionIdAtom);
@@ -305,7 +305,7 @@ export default function Home() {
           // show the main screen
           <>
             <div className="w-full flex flex-col text-center justify-center items-center h-full gap-16">
-              <div className="h-96 md:h-auto overflow-y-auto">
+              <div className="max-h-96 md:max-h-max overflow-y-auto">
                 {words.length > 0 ? (
                   words.map((word, index) => (
                     <span key={index} className={`word-${index}`}>

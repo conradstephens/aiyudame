@@ -48,3 +48,7 @@
     --ring: 240 4.9% 83.9%;
   }
 }
+
+.recording-button {
+  @apply h-9 w-9 border-0 rounded-full outline-none cursor-pointer
+}

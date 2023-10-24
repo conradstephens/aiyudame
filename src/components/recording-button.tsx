@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { LazyMotion, ResolvedValues, domAnimation, m } from "framer-motion";
-import { Loader2 } from "lucide-react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   aiTextResponseAtom,
   recorderAtom,
   sessionIdAtom,
   showJoyRideAtom,
 } from "@/atoms";
-import { Button } from "./ui/button";
-import { isAppleEnvironment } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
 import { storeResponse } from "@/constants/language";
+import { isAppleEnvironment } from "@/lib/utils";
+import clsx from "clsx";
+import { LazyMotion, ResolvedValues, domAnimation, m } from "framer-motion";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface ComponentProps {
   language: string;
@@ -164,6 +164,10 @@ export default function RecordingButton(props: ComponentProps) {
     audio.autoplay = true;
     audio.src = URL.createObjectURL(mediaSource);
 
+    audio.addEventListener("playing", () => {
+      setPlayingResponse(true);
+    });
+
     let aiResponse = "";
     socket.onopen = async function () {
       console.log("elevenlabs connection established");
@@ -235,11 +239,11 @@ export default function RecordingButton(props: ComponentProps) {
       });
 
       sourceBuffer.addEventListener("updateend", () => {
-        stopLoading();
         // Once the previous chunk has been appended, check for more chunks
         const nextChunk = audioChunksQueue.shift(); // take the next chunk from the queue
         if (!nextChunk) return;
         sourceBuffer.appendBuffer(nextChunk); // append it
+        audio.play();
       });
 
       // 2. Handling WebSocket Messages
@@ -262,6 +266,7 @@ export default function RecordingButton(props: ComponentProps) {
 
         if (response.isFinal) {
           console.log("Generation complete");
+          stopLoading();
         }
       };
     });
@@ -269,104 +274,123 @@ export default function RecordingButton(props: ComponentProps) {
     return aiResponse;
   };
 
-  // This useEffect hook sets up the media recorder when the component mounts
   useEffect(() => {
-    if (typeof window !== "undefined" && sessionId && !showJoyride) {
+    if (!mediaRecorder || !isRecording) {
+      return;
+    }
+  }, [mediaRecorder, isRecording]);
+
+  const initalizeMediaRecorder = async () => {
+    if (!sessionId || showJoyride) {
+      return;
+    }
+    try {
       console.log("setting up media recorder");
       let chunks: Blob[] = [];
-      const initalizeMediaRecorder = async () => {
-        try {
-          // load the polyfill if the browser is safari
-          const isPolyfillLoaded = await loadPolyfill();
+      // load the polyfill if the browser is safari
+      const isPolyfillLoaded = await loadPolyfill();
 
-          const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
 
-          const newMediaRecorder = new MediaRecorder(stream);
-          newMediaRecorder.addEventListener("start", () => {
-            chunks = [];
-          });
-          newMediaRecorder.addEventListener("dataavailable", (e) => {
-            chunks.push(e.data);
-          });
+      const newMediaRecorder = new MediaRecorder(stream);
+      newMediaRecorder.addEventListener("start", () => {
+        chunks = [];
+      });
+      newMediaRecorder.addEventListener("dataavailable", (e) => {
+        chunks.push(e.data);
+      });
 
-          newMediaRecorder.addEventListener("stop", async () => {
-            // if polyfill is loaded, use wav format
-            const fileType = isPolyfillLoaded ? "audio/wav" : "audio/webm";
-            const audioBlob = new Blob(chunks, { type: fileType });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            audio.onerror = (err) => {
-              console.error("Error playing audio:", err);
-              stopLoading();
-            };
-            const reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-            reader.onloadend = async function () {
-              try {
-                // transcribe audio
-                const humanResponse = await handleTransciption(reader);
-
-                // generate response
-                const body = await handleChatCompletion(humanResponse);
-
-                if (!body) {
-                  return;
-                }
-
-                // establish socket connection
-                const aiResponse = establishSocketConnection(body);
-
-                await storeConversation(humanResponse, aiResponse);
-              } catch (error: any) {
-                console.error(error);
-                stopLoading();
-                toast({
-                  description: error.message,
-                  variant: "destructive",
-                });
-              }
-            };
-          });
-          setMediaRecorder(newMediaRecorder);
-        } catch (error) {
-          console.error(error);
+      newMediaRecorder.addEventListener("stop", async () => {
+        startLoading();
+        // if polyfill is loaded, use wav format
+        const fileType = isPolyfillLoaded ? "audio/wav" : "audio/webm";
+        const audioBlob = new Blob(chunks, { type: fileType });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.onerror = (err) => {
+          console.error("Error playing audio:", err);
           stopLoading();
-          toast({
-            description: "Please allow microphone access to continue",
-            variant: "destructive",
-          });
-        }
-      };
-      initalizeMediaRecorder();
-    }
-  }, [sessionId, showJoyride]);
+        };
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = async function () {
+          try {
+            // transcribe audio
+            const humanResponse = await handleTransciption(reader);
 
-  // Function to start recording
-  const startRecording = () => {
-    setRecordingState((prev) => {
-      return {
-        ...prev,
-        isRecording: true,
-      };
-    });
-    if (mediaRecorder) {
-      mediaRecorder.start();
+            // generate response
+            const body = await handleChatCompletion(humanResponse);
+
+            if (!body) {
+              return;
+            }
+
+            // establish socket connection
+            const aiResponse = establishSocketConnection(body);
+
+            await storeConversation(humanResponse, aiResponse);
+          } catch (error: any) {
+            console.error(error);
+            stopLoading();
+            toast({
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+        };
+      });
+
+      newMediaRecorder.addEventListener("error", (err) => {
+        console.error("Error recording audio:", err);
+        stopLoading();
+        toast({
+          description: "Error recording audio",
+          variant: "destructive",
+        });
+      });
+      setMediaRecorder(newMediaRecorder);
+      setRecordingState((prevState) => {
+        return {
+          ...prevState,
+          isRecording: true,
+        };
+      });
+      newMediaRecorder.start();
+    } catch (error) {
+      console.error(error);
+      stopLoading();
+      toast({
+        description: "Please allow microphone access to continue",
+        variant: "destructive",
+      });
     }
   };
-  // Function to stop recording
+
+  const startRecording = () => {
+    if (mediaRecorder) {
+      setRecordingState((prevState) => {
+        return {
+          ...prevState,
+          isRecording: true,
+        };
+      });
+      mediaRecorder.start();
+      return;
+    }
+    // if media recorder is not initialized, initialize it
+    initalizeMediaRecorder();
+  };
+
   const stopRecording = () => {
-    setRecordingState((prev) => {
+    setRecordingState((prevState) => {
       return {
-        ...prev,
+        ...prevState,
         isRecording: false,
       };
     });
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-      startLoading();
-    }
+    mediaRecorder?.stop();
   };
 
   function round(value: number, precision: number) {
@@ -409,6 +433,59 @@ export default function RecordingButton(props: ComponentProps) {
     }
   };
 
+  // visualize audio
+  useEffect(() => {
+    if (!mediaRecorder) {
+      return;
+    }
+    const canvas = document.getElementById(
+      "mic-visualizer",
+    ) as HTMLCanvasElement;
+    const audioContext = new AudioContext();
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext("2d");
+    // Create an analyser node.
+    const analyser = audioContext.createAnalyser();
+
+    const source = audioContext.createMediaStreamSource(mediaRecorder.stream);
+
+    source.connect(analyser);
+
+    // Create an array to store the frequency data.
+    const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+
+    // Create a function to draw the frequency data.
+    function draw() {
+      if (!ctx) {
+        return;
+      }
+      // Get the frequency data.
+      analyser.getByteFrequencyData(frequencyData);
+
+      // Clear the canvas.
+      ctx.clearRect(0, 0, canvas.width as number, canvas.height as number);
+
+      const sum = frequencyData.reduce((a, b) => a + b, 0);
+      const avg = sum / frequencyData.length;
+      const baseRadius = Math.min(canvas.width, canvas.height) / 56;
+      const multiplier = isRecording ? 0.4 : 0; // Adjust multiplier to achieve desired effect
+      const radius = baseRadius + avg * multiplier;
+
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(173,0,0,0.3)";
+      ctx.fill();
+
+      // Request the next animation frame.
+      window.requestAnimationFrame(draw);
+    }
+
+    // Start the animation.
+
+    draw();
+  }, [isRecording, mediaRecorder]);
+
   return (
     <div className="w-full flex flex-col gap-10 text-center justify-center items-center">
       {playingResponse || loading ? (
@@ -417,9 +494,26 @@ export default function RecordingButton(props: ComponentProps) {
           {playingResponse ? "Playing response..." : "Please wait..."}
         </div>
       ) : (
-        <div className="text-md w-full relative">
-          {isRecording ? (
-            <Button onClick={stopRecording} className="w-56">
+        <div className="flex flex-col items-center justify-center gap-8">
+          <div className="relative">
+            <canvas
+              id="mic-visualizer"
+              className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%]"
+            />
+            <div
+              id="recording-button"
+              onClick={isRecording ? stopRecording : startRecording}
+              className={clsx(
+                "recording-button",
+                "absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] z-10",
+                isRecording
+                  ? "bg-red-500 hover:bg-red-400"
+                  : "bg-red-900 hover:bg-red-800",
+              )}
+            />
+          </div>
+          <div className="text-sm font-semibold">
+            {isRecording ? (
               <LazyMotion features={domAnimation}>
                 <m.div
                   key="recording"
@@ -435,12 +529,10 @@ export default function RecordingButton(props: ComponentProps) {
                   {status}
                 </m.div>
               </LazyMotion>
-            </Button>
-          ) : (
-            <Button onClick={startRecording} className="w-56 recording-button">
-              Start recording
-            </Button>
-          )}
+            ) : (
+              "Click the button to start recording"
+            )}
+          </div>
         </div>
       )}
     </div>

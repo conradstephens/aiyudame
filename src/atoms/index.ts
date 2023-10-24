@@ -11,5 +11,4 @@ export const isReturningUserAtom = atom<boolean>(false);
 export const recorderAtom = atom({
   isRecording: false,
   status: "Recording in progress...",
-  shouldUpdateText: false,
 });

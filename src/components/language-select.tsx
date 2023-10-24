@@ -1,11 +1,11 @@
-import { Form, FormField, FormItem, FormControl } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import {
   Select,
-  SelectTrigger,
   SelectContent,
   SelectGroup,
-  SelectLabel,
   SelectItem,
+  SelectLabel,
+  SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { set } from "idb-keyval";
@@ -37,7 +37,7 @@ export default function LanguageSelect() {
                   <SelectGroup>
                     <SelectLabel>Language</SelectLabel>
                     <SelectItem value="es">Spanish</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
+                    {/* <SelectItem value="en">English</SelectItem> */}
                     <SelectItem value="it">Italian</SelectItem>
                   </SelectGroup>
                 </SelectContent>

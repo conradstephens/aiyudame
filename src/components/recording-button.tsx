@@ -19,13 +19,17 @@ interface ComponentProps {
   language: string;
 }
 
+function round(value: number, precision: number) {
+  var multiplier = Math.pow(10, precision || 0);
+  return Math.round(value * multiplier) / multiplier;
+}
+
 export default function RecordingButton(props: ComponentProps) {
   const { language } = props;
   const sessionId = useAtomValue(sessionIdAtom);
   const showJoyride = useAtomValue(showJoyRideAtom);
+  const [{ isRecording, status }, setRecordingState] = useAtom(recorderAtom);
   const [playingResponse, setPlayingResponse] = useState(false);
-  const [{ isRecording, status, shouldUpdateText }, setRecordingState] =
-    useAtom(recorderAtom);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
@@ -145,7 +149,6 @@ export default function RecordingButton(props: ComponentProps) {
     const audio = new Audio();
     audio.controls = true;
     audio.src = URL.createObjectURL(mediaSource);
-    audio.play();
 
     audio.addEventListener("playing", () => {
       setPlayingResponse(true);
@@ -164,10 +167,6 @@ export default function RecordingButton(props: ComponentProps) {
     socket.onopen = async function () {
       console.log("elevenlabs connection established");
 
-      const openAiReader = body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-
       const bosMessage = {
         text: " ",
         voice_settings: {
@@ -178,6 +177,13 @@ export default function RecordingButton(props: ComponentProps) {
       };
 
       socket.send(JSON.stringify(bosMessage));
+
+      // play audio
+      audio.play();
+
+      const openAiReader = body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
 
       while (!done) {
         const { value, done: doneReading } = await openAiReader.read();
@@ -308,7 +314,7 @@ export default function RecordingButton(props: ComponentProps) {
 
       newMediaRecorder.addEventListener("stop", async () => {
         startLoading();
-        // if polyfill is loaded, use wav format
+        // if polyfill is loaded, use mpeg format
         const fileType = isPolyfillLoaded ? "audio/mpeg" : "audio/webm";
         const audioBlob = new Blob(chunks, { type: fileType });
 
@@ -345,7 +351,6 @@ export default function RecordingButton(props: ComponentProps) {
           variant: "destructive",
         });
       });
-      setMediaRecorder(newMediaRecorder);
       newMediaRecorder.start();
       setRecordingState((prevState) => {
         return {
@@ -353,6 +358,7 @@ export default function RecordingButton(props: ComponentProps) {
           isRecording: true,
         };
       });
+      setMediaRecorder(newMediaRecorder);
     } catch (error) {
       console.error(error);
       stopLoading();
@@ -365,13 +371,13 @@ export default function RecordingButton(props: ComponentProps) {
 
   const startRecording = () => {
     if (mediaRecorder) {
+      mediaRecorder.start();
       setRecordingState((prevState) => {
         return {
           ...prevState,
           isRecording: true,
         };
       });
-      mediaRecorder.start();
       return;
     }
     // if media recorder is not initialized, initialize it
@@ -379,34 +385,14 @@ export default function RecordingButton(props: ComponentProps) {
   };
 
   const stopRecording = () => {
+    mediaRecorder?.stop();
     setRecordingState((prevState) => {
       return {
         ...prevState,
         isRecording: false,
       };
     });
-    mediaRecorder?.stop();
   };
-
-  function round(value: number, precision: number) {
-    var multiplier = Math.pow(10, precision || 0);
-    return Math.round(value * multiplier) / multiplier;
-  }
-
-  // This useEffect hook updates the recording text
-  useEffect(() => {
-    if (shouldUpdateText) {
-      setRecordingState((prev) => {
-        return {
-          ...prev,
-          status:
-            prev.status === "Click to stop recording"
-              ? "Recording in progress..."
-              : "Click to stop recording",
-        };
-      });
-    }
-  }, [shouldUpdateText]);
 
   const onUpdateFrame = (latest: ResolvedValues) => {
     const value = round(latest.opacity as number, 2);
@@ -414,15 +400,10 @@ export default function RecordingButton(props: ComponentProps) {
       setRecordingState((prev) => {
         return {
           ...prev,
-          shouldUpdateText: true,
-        };
-      });
-    }
-    if (value > 0.01) {
-      setRecordingState((prev) => {
-        return {
-          ...prev,
-          shouldUpdateText: false,
+          status:
+            prev.status === "Click to stop recording"
+              ? "Recording in progress..."
+              : "Click to stop recording",
         };
       });
     }
@@ -450,6 +431,8 @@ export default function RecordingButton(props: ComponentProps) {
     // Create an array to store the frequency data.
     const frequencyData = new Uint8Array(analyser.frequencyBinCount);
 
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
     // Create a function to draw the frequency data.
     function draw() {
       if (!ctx) {
@@ -463,8 +446,9 @@ export default function RecordingButton(props: ComponentProps) {
 
       const sum = frequencyData.reduce((a, b) => a + b, 0);
       const avg = sum / frequencyData.length;
-      const baseRadius = Math.min(canvas.width, canvas.height) / 56;
-      const multiplier = isRecording ? 0.5 : 0; // Adjust multiplier to achieve desired effect
+      const baseRadius =
+        Math.min(canvas.width, canvas.height) / (isMobile ? 35 : 60);
+      const multiplier = isRecording ? (isMobile ? 0.75 : 0.4) : 0; // Adjust multiplier to achieve desired effect
       const radius = baseRadius + avg * multiplier;
 
       ctx.beginPath();
@@ -479,14 +463,16 @@ export default function RecordingButton(props: ComponentProps) {
     // Start the animation.
 
     draw();
-  }, [isRecording, mediaRecorder]);
+  }, [isRecording]);
 
   return (
     <div className="w-full flex flex-col gap-10 text-center justify-center items-center">
       {playingResponse || loading ? (
-        <div className="flex flex-col gap-1 items-center">
-          <Loader2 className="h-14 w-14 animate-spin" />
-          {playingResponse ? "Playing response..." : "Please wait..."}
+        <div className="flex flex-col gap-1 items-center font-semibold">
+          <Loader2 className="h-9 w-9 animate-spin" />
+          <div className="text-sm">
+            {playingResponse ? "Playing response..." : "Please wait..."}
+          </div>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center gap-8">
@@ -504,6 +490,7 @@ export default function RecordingButton(props: ComponentProps) {
                 isRecording
                   ? "bg-red-500 hover:bg-red-400"
                   : "bg-red-900 hover:bg-red-800",
+                "no-select",
               )}
             />
           </div>

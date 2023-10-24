@@ -305,7 +305,7 @@ export default function Home() {
           // show the main screen
           <>
             <div className="w-full flex flex-col text-center justify-center items-center h-full gap-16">
-              <div className="max-h-96 md:max-h-max overflow-y-auto">
+              <div className="h-72 md:h-96 overflow-y-auto">
                 {words.length > 0 ? (
                   words.map((word, index) => (
                     <span key={index} className={`word-${index}`}>

@@ -108,3 +108,24 @@ yarn dev
 ## Deployment 😎
 
 - If deploying to vercel, see this [guide](https://planetscale.com/docs/tutorials/deploy-to-vercel)
+
+- Local
+
+```shell
+docker build -t aiyudame .
+docker run -p 3000:3000 aiyudame
+```
+
+- Dev
+
+```shell
+gcloud builds submit --tag gcr.io/aiyudame/dev --project aiyudame
+gcloud run deploy aiyudame-dev --image gcr.io/aiyudame/dev --project aiyudame --platform managed --region us-central1
+```
+
+- Production
+
+```shell
+gcloud builds submit --tag gcr.io/aiyudame/prod --project aiyudame
+gcloud run deploy aiyudame --image gcr.io/aiyudame/prod --project aiyudame --platform managed --min-instances 1 --region us-central1
+```

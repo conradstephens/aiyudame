@@ -1,7 +1,7 @@
-import speech from "@google-cloud/speech";
-import http from "http";
-import { Server } from "socket.io";
-
+const http = require("http");
+const speech = require("@google-cloud/speech");
+const { Server } = require("socket.io");
+const next = require("next");
 const httpServer = http.createServer();
 
 const client = new speech.SpeechClient();

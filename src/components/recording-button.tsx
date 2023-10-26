@@ -25,6 +25,11 @@ function round(value: number, precision: number) {
   return Math.round(value * multiplier) / multiplier;
 }
 
+const webSocketUri =
+  process.env.NODE_ENV === "production"
+    ? "https://aiyudame-server-u4cwegvzla-uc.a.run.app"
+    : "http://localhost:3001";
+
 export default function RecordingButton(props: ComponentProps) {
   const { language } = props;
   const sessionId = useAtomValue(sessionIdAtom);
@@ -138,10 +143,6 @@ export default function RecordingButton(props: ComponentProps) {
     audio.addEventListener("playing", () => {
       setPlayingResponse(true);
     });
-
-    // audio.addEventListener("waiting", () => {
-    //   console.log("waiting for audio to load");
-    // });
 
     audio.addEventListener("ended", () => {
       console.log("audio ended");
@@ -283,7 +284,7 @@ export default function RecordingButton(props: ComponentProps) {
     }
     try {
       console.log("setting up media recorder");
-      const socket = io("https://aiyudame-server-u4cwegvzla-uc.a.run.app");
+      const socket = io(webSocketUri);
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 16000,

@@ -6,9 +6,11 @@ const httpServer = http.createServer();
 
 const client = new speech.SpeechClient();
 
+const origin = process.env.NODE_ENV === "production" ? "https://aiyudame.vercel.app" : "http://localhost:3000";
+
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://aiyudame.vercel.app", // Replace with your frontend URL
+    origin, // Replace with your frontend URL
     methods: ["POST", "GET"],
     credentials: true,
   },
@@ -61,5 +63,6 @@ io.on("connection", (socket) => {
 
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
+  console.log("enviroment", process.env.NODE_ENV)
   console.log(`Socket.io server is running on port ${PORT}`);
 });

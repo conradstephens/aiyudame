@@ -14,6 +14,7 @@ import LanguageSelect from "@/components/language-select";
 import RecordingButton from "@/components/recording-button";
 import ThemeToggle from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { storeResponse } from "@/constants/language";
 import clsx from "clsx";
@@ -85,9 +86,10 @@ export default function Home() {
       sessionId: id,
       createdAt: new Date().toLocaleString(),
     });
+    setResponse({ text: "", words: [] });
+    await del("previousResponse");
     setSessionId(`${id}-${language}`);
     // clear the previous response
-    await del("previousResponse");
   };
 
   useEffect(() => {
@@ -304,8 +306,8 @@ export default function Home() {
         ) : (
           // show the main screen
           <>
-            <div className="w-full flex flex-col text-center justify-center items-center h-full gap-16">
-              <div className="h-72 md:h-96 overflow-y-auto">
+            <div className="w-full flex flex-col justify-center items-center h-full gap-16">
+              <ScrollArea className="h-72 md:h-96">
                 {words.length > 0 ? (
                   words.map((word, index) => (
                     <span key={index} className={`word-${index}`}>
@@ -321,7 +323,7 @@ export default function Home() {
                     <Skeleton className="w-96 h-10" />
                   </>
                 )}
-              </div>
+              </ScrollArea>
 
               <RecordingButton language={language} />
             </div>

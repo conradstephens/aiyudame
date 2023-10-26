@@ -1,6 +1,4 @@
-import { Styles } from "react-joyride";
-
-export const lightStyles: Styles = {
+export const lightStyles = {
   options: {
     backgroundColor: "#FFF",
     arrowColor: "#e4e4e7",
@@ -20,7 +18,7 @@ export const lightStyles: Styles = {
   },
 };
 
-export const darkStyles: Styles = {
+export const darkStyles = {
   options: {
     arrowColor: "#27272a",
     primaryColor: "#FFF",

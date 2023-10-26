@@ -1,0 +1,14 @@
+{
+  "name": "aiyudame-server",
+  "module": "index.js",
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@google-cloud/speech": "^6.0.2",
+    "socket.io": "^4.7.2"
+  }
+}

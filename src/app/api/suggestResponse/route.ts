@@ -1,7 +1,7 @@
+import prisma from "@/lib/prisma";
+import { OpenAIStream, StreamingTextResponse } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { OpenAI } from "openai";
-import { StreamingTextResponse, OpenAIStream } from "ai";
-import prisma from "@/lib/prisma";
 import { ChatCompletionMessageParam } from "openai/resources/chat/index.mjs";
 
 const openai = new OpenAI();

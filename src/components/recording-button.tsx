@@ -14,6 +14,7 @@ import { LazyMotion, ResolvedValues, domAnimation, m } from "framer-motion";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
 
 interface ComponentProps {
   language: string;
@@ -34,7 +35,13 @@ export default function RecordingButton(props: ComponentProps) {
     null,
   );
   const [loading, setLoading] = useState(false);
-  const [isPolyfillLoaded, setIsPolyfillLoaded] = useState(false);
+
+  const [audioInput, setAudioInput] =
+    useState<MediaStreamAudioSourceNode | null>(null);
+  const [audioProcessor, setAudioProcessor] = useState<AudioWorkletNode | null>(
+    null,
+  );
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
 
   const { toast } = useToast();
 
@@ -47,28 +54,6 @@ export default function RecordingButton(props: ComponentProps) {
   const stopLoading = () => {
     setPlayingResponse(false);
     setLoading(false);
-  };
-
-  // transcribe user input into text
-  const handleTransciption = async (blob: Blob) => {
-    const formData = new FormData();
-    formData.append("audioBlob", blob);
-    formData.append("language", language);
-    formData.append("sessionId", sessionId ?? "");
-    // transcribe audio and begin conversation with openai
-    const response = await fetch("/api/speechToText", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || data.error) {
-      stopLoading();
-      throw new Error(data.error);
-    }
-
-    return data.text;
   };
 
   // send transcibed text to openai to generate response
@@ -262,7 +247,7 @@ export default function RecordingButton(props: ComponentProps) {
         }
 
         if (response.isFinal) {
-          console.log("Generation complete");
+          // console.log("Generation complete");
           stopLoading();
         }
       };
@@ -286,7 +271,6 @@ export default function RecordingButton(props: ComponentProps) {
         // user mpeg encoder for better compression
         AudioRecorder.prototype.mimeType = "audio/mpeg";
         window.MediaRecorder = AudioRecorder;
-        setIsPolyfillLoaded(true);
         console.log("loaded polyfill");
       }
     };
@@ -299,31 +283,43 @@ export default function RecordingButton(props: ComponentProps) {
     }
     try {
       console.log("setting up media recorder");
-      let chunks: Blob[] = [];
+      const socket = io("https://aiyudame-dev-u4cwegvzla-uc.a.run.app");
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
+        audio: {
+          sampleRate: 16000,
+          sampleSize: 16,
+          channelCount: 1,
+          deviceId: "default",
+        },
+        video: false,
       });
 
       const newMediaRecorder = new MediaRecorder(stream);
-      newMediaRecorder.addEventListener("start", () => {
-        chunks = [];
-      });
-      newMediaRecorder.addEventListener("dataavailable", (e) => {
-        chunks.push(e.data);
-      });
+      const audioContext = new AudioContext();
+      await audioContext.audioWorklet.addModule(
+        "/worklets/recorderWorkletProcessor.js",
+      );
+      const newAudioInput = audioContext.createMediaStreamSource(stream);
+      const newAudioProcessor = new AudioWorkletNode(
+        audioContext,
+        "recorder.worklet",
+      );
+      setAudioContext(audioContext);
+      setAudioInput(newAudioInput);
+      setAudioProcessor(audioProcessor);
+      newAudioProcessor.connect(audioContext.destination);
+      newAudioInput.connect(newAudioProcessor);
 
-      newMediaRecorder.addEventListener("stop", async () => {
-        startLoading();
-        // if polyfill is loaded, use mpeg format
-        const fileType = isPolyfillLoaded ? "audio/mpeg" : "audio/webm";
-        const audioBlob = new Blob(chunks, { type: fileType });
+      newAudioProcessor.port.onmessage = (event) => {
+        socket.emit("send_audio", event.data);
+      };
 
+      socket.on("transcription", async (data) => {
+        console.log("transcription", data);
         try {
-          // transcribe audio
-          const humanResponse = await handleTransciption(audioBlob);
-
+          startLoading();
           // generate response
-          const body = await handleChatCompletion(humanResponse);
+          const body = await handleChatCompletion(data);
 
           if (!body) {
             return;
@@ -332,7 +328,7 @@ export default function RecordingButton(props: ComponentProps) {
           // establish socket connection
           const aiResponse = establishSocketConnection(body);
 
-          await storeConversation(humanResponse, aiResponse);
+          await storeConversation(data, aiResponse);
         } catch (error: any) {
           console.error(error);
           stopLoading();
@@ -341,6 +337,13 @@ export default function RecordingButton(props: ComponentProps) {
             variant: "destructive",
           });
         }
+      });
+
+      newMediaRecorder.addEventListener("stop", async () => {
+        newAudioInput.disconnect();
+        newAudioProcessor.disconnect();
+        audioContext.close();
+        socket.emit("end_audio");
       });
 
       newMediaRecorder.addEventListener("error", (err) => {
@@ -370,7 +373,10 @@ export default function RecordingButton(props: ComponentProps) {
   };
 
   const startRecording = () => {
-    if (mediaRecorder) {
+    if (mediaRecorder && audioContext && audioProcessor) {
+      // connect audio processor
+      audioProcessor.connect(audioContext.destination);
+      audioInput?.connect(audioProcessor);
       mediaRecorder.start();
       setRecordingState((prevState) => {
         return {

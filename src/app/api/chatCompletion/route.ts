@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { OpenAIStream, StreamingTextResponse } from "ai";
-import OpenAI from "openai";
 import prisma from "@/lib/prisma";
-import { ChatCompletionMessageParam } from "openai/resources/chat/index.mjs";
+import { OpenAIStream, StreamingTextResponse } from "ai";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
+import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
+import { ChatCompletionMessageParam } from "openai/resources/chat/index.mjs";
 
 const openai = new OpenAI();
 

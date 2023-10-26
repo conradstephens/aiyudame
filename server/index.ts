@@ -1,11 +1,12 @@
-const http = require("http");
-const speech = require("@google-cloud/speech");
-const { Server } = require("socket.io");
-const next = require("next");
+import speech from "@google-cloud/speech";
+import http from "http";
+import { Server } from "socket.io";
+
 const httpServer = http.createServer();
 
 const client = new speech.SpeechClient();
 
+// @ts-ignore
 const io = new Server(httpServer, {
   cors: {
     origin: "http://localhost:3000", // Replace with your frontend URL

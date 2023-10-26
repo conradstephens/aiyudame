@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
+    "dev": "next dev",
     "build": "next build",
-    "start": "NODE_ENV=production node server.js",
-    "node": "node server.js",
+    "start": "NODE_ENV=production bun server/index.ts",
+    "node": "bun server/index.ts",
     "lint": "next lint",
     "format": "npx prettier . --write",
     "postinstall": "prisma generate",

@@ -12,3 +12,4 @@ export const recorderAtom = atom({
   isRecording: false,
   status: "Recording in progress...",
 });
+export const languageAtom = atom("es");

@@ -3,44 +3,30 @@
 import {
   aiTextResponseAtom,
   isReturningUserAtom,
+  languageAtom,
   sessionIdAtom,
   showAiResponseJoyRideAtom,
   showJoyRideAtom,
 } from "@/atoms";
-import AiResponseGuidedTour from "@/components/ai-response-guided-tour";
-import AiResponseWord from "@/components/ai-response-word";
-import GuidedTour from "@/components/guided-tour";
-import LanguageSelect from "@/components/language-select";
-import RecordingButton from "@/components/recording-button";
-import ThemeToggle from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
+import RecordingSection from "@/components/recording-section";
+import Toolbar from "@/components/toolbar";
+import WelcomeSection from "@/components/welcome-section";
 import { storeResponse } from "@/constants/language";
-import clsx from "clsx";
-import { del, get, getMany, set, setMany } from "idb-keyval";
-import { useAtom, useSetAtom } from "jotai";
+import { del, get, getMany, set } from "idb-keyval";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Loader2 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useEffect } from "react";
-import { FormProvider, useForm } from "react-hook-form";
 
 export default function Home() {
   const [sessionId, setSessionId] = useAtom(sessionIdAtom);
-  const [{ text, words }, setResponse] = useAtom(aiTextResponseAtom);
-  const [showJoyride, setShowJoyride] = useAtom(showJoyRideAtom);
+  const [{ text }, setResponse] = useAtom(aiTextResponseAtom);
+  const showJoyride = useAtomValue(showJoyRideAtom);
   const setShowAiResponseJoyRide = useSetAtom(showAiResponseJoyRideAtom);
   const [isReturningUser, setIsReturningUser] = useAtom(isReturningUserAtom);
-
+  const [language, setLanguage] = useAtom(languageAtom);
   const isNewUser = !isReturningUser && !showJoyride;
 
-  const methods = useForm({
-    defaultValues: {
-      language: "es",
-    },
-  });
-
-  const language = methods.watch("language");
   const handleLanguageUpdate = async () => {
     // get the first 21 out of 24 characters of the session id
     // always adding a "-" and the language code to the end of the session id
@@ -115,7 +101,7 @@ export default function Home() {
         hasFinishedAiResponseJoyride,
       ] = store;
       const previousUsedLanguage = settings?.language ?? "es";
-      methods.setValue("language", previousUsedLanguage);
+      setLanguage(previousUsedLanguage);
       // restore the last thing the ai said
       switch (previousUsedLanguage) {
         case "it":
@@ -245,21 +231,6 @@ export default function Home() {
     }
   }, [sessionId, isReturningUser]);
 
-  const handleShowJoyride = () => {
-    setShowJoyride(true);
-    setShowAiResponseJoyRide(true);
-  };
-
-  const handleSkipTutorial = async () => {
-    await setMany([
-      ["isReturningUser", true],
-      ["hasFinishedAiResponseJoyride", true],
-    ]);
-    setIsReturningUser(true);
-    setShowJoyride(false);
-    setShowAiResponseJoyRide(false);
-  };
-
   // if no session id show loading
   if (!sessionId) {
     return (
@@ -272,64 +243,13 @@ export default function Home() {
   return (
     <div className="flex justify-center h-screen app-container">
       <div className="flex flex-col p-5 sm:max-w-7xl w-full">
-        <div
-          className={clsx(
-            "flex justify-between flex-row",
-            isNewUser && "flex-row-reverse",
-          )}
-        >
-          {(isReturningUser || showJoyride) && (
-            <FormProvider {...methods}>
-              <LanguageSelect />
-            </FormProvider>
-          )}
-          <ThemeToggle />
-        </div>
+        <Toolbar />
         {isNewUser ? (
-          // show welcome screen
-          <div className="flex flex-col items-center gap-10 justify-center h-full text-center">
-            <div className="flex flex-col gap-5">
-              <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-clip-text text-transparent bg-gradient-to-r dark:from-white dark:to-gray-500 from-black to-gray-500">
-                Welcome to AIyudame!
-              </h1>
-              <p className="max-w-[600px] md:text-xl mx-auto">
-                Practice your conversational Spanish with an AI companion.
-              </p>
-            </div>
-            <div className="flex gap-2 bg-zinc">
-              <Button onClick={handleShowJoyride}>Get started!</Button>
-              <Button onClick={handleSkipTutorial} variant="ghost">
-                Skip tutorial
-              </Button>
-            </div>
-          </div>
+          // show welcome section
+          <WelcomeSection />
         ) : (
-          // show the main screen
-          <>
-            <div className="w-full flex flex-col justify-center items-center h-full gap-16">
-              <ScrollArea className="h-72 md:h-96">
-                {words.length > 0 ? (
-                  words.map((word, index) => (
-                    <span key={index} className={`word-${index}`}>
-                      <AiResponseWord
-                        word={word}
-                        context={text}
-                        language={language}
-                      />
-                    </span>
-                  ))
-                ) : (
-                  <>
-                    <Skeleton className="w-96 h-10" />
-                  </>
-                )}
-              </ScrollArea>
-
-              <RecordingButton language={language} />
-            </div>
-            {!isReturningUser && <GuidedTour />}
-            {!!words.length && <AiResponseGuidedTour />}
-          </>
+          // show the recording section
+          <RecordingSection />
         )}
       </div>
     </div>

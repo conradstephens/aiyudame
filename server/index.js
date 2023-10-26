@@ -1,17 +1,15 @@
-import speech from "@google-cloud/speech";
-import http from "http";
-import { Server } from "socket.io";
+const http = require("http");
+const { Server } = require("socket.io");
+const speech = require("@google-cloud/speech");
 
 const httpServer = http.createServer();
 
 const client = new speech.SpeechClient();
 
-// @ts-ignore
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000", // Replace with your frontend URL
-    methods: ["POST"],
-    allowedHeaders: ["my-custom-header"],
+    origin: "https://aiyudame.vercel.app", // Replace with your frontend URL
+    methods: ["POST", "GET"],
     credentials: true,
   },
 });
@@ -36,7 +34,6 @@ io.on("connection", (socket) => {
     .on("data", (data) => {
       const result = data.results[0];
       const isFinal = result?.isFinal;
-
       if (result && isFinal && result.alternatives[0]) {
         socket.emit("transcription", result.alternatives[0].transcript);
 

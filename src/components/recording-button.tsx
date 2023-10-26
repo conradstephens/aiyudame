@@ -283,7 +283,7 @@ export default function RecordingButton(props: ComponentProps) {
     }
     try {
       console.log("setting up media recorder");
-      const socket = io("http://localhost:3001");
+      const socket = io("https://aiyudame-dev-u4cwegvzla-uc.a.run.app");
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 16000,

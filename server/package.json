@@ -1,7 +1,6 @@
 {
   "name": "aiyudame-server",
-  "module": "index.ts",
-  "type": "module",
+  "module": "index.js",
   "devDependencies": {
     "bun-types": "latest"
   },

@@ -38,4 +38,4 @@ ENV PORT 3000
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["bun", "index.ts"]
+CMD ["node", "index.js"]

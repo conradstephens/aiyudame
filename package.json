@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "NODE_ENV=production node server/index.js",
     "node": "NODE_ENV=development node server/index.js",
@@ -38,7 +38,7 @@
     "jotai": "^2.4.2",
     "lucide-react": "^0.274.0",
     "nanoid": "^4.0.2",
-    "next": "^13.4.19",
+    "next": "latest",
     "next-themes": "^0.2.1",
     "openai": "^4.4.0",
     "postcss": "^8.4.31",

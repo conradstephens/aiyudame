@@ -26,10 +26,7 @@ function round(value: number, precision: number) {
   return Math.round(value * multiplier) / multiplier;
 }
 
-const webSocketUri =
-  process.env.NODE_ENV === "production"
-    ? "https://aiyudame-server-u4cwegvzla-uc.a.run.app"
-    : "http://localhost:3001";
+const webSocketUri = process.env.NEXT_PUBLIC_WEB_SOCKET_URI as string;
 
 export default function RecordingButton(props: ComponentProps) {
   const { language } = props;

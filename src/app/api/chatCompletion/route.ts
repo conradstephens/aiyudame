@@ -1,4 +1,3 @@
-import prisma from "@/lib/prisma";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
@@ -26,31 +25,15 @@ export async function POST(request: NextRequest) {
   const req = await request.json();
 
   const content = req.content;
-  const sessionId = req.sessionId;
   const language = req.language;
-  console.log("language => ", language);
-  console.log("sessionId => ", sessionId);
+  const conversationHistory =
+    req.conversationHistory as ChatCompletionMessageParam[];
 
   try {
     const systemPrompt = generateSystemPrompt(language);
-    const planetscaleResponse = await prisma.conversation_history.findMany({
-      where: {
-        session_id: sessionId,
-      },
-      orderBy: {
-        // Order by the most recent messages
-        created_at: "asc",
-      },
-    });
 
-    // Convert the messages into a format that OpenAI can understand
-    const currentConversation = planetscaleResponse.map(({ type, content }) => {
-      const role = type === "human" ? "user" : "assistant";
-      return { role, content } as ChatCompletionMessageParam;
-    });
-    console.log("systemPrompt => ", systemPrompt);
-    console.log("currentConversation => ", currentConversation);
     console.log("content => ", content);
+
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo-16k",
       temperature: 0.7,
@@ -59,7 +42,7 @@ export async function POST(request: NextRequest) {
           role: "system",
           content: systemPrompt,
         },
-        ...currentConversation,
+        ...conversationHistory,
         {
           role: "user",
           content,

@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 export const aiTextResponseAtom = atom<{ text: string; words: string[] }>({
   text: "",
@@ -12,3 +13,4 @@ export const recorderAtom = atom({
   isRecording: false,
   status: "Recording in progress...",
 });
+export const conversationHistoryAtom = atom<ChatCompletionMessageParam[]>([]);

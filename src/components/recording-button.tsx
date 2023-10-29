@@ -2,6 +2,7 @@
 
 import {
   aiTextResponseAtom,
+  conversationHistoryAtom,
   recorderAtom,
   sessionIdAtom,
   showJoyRideAtom,
@@ -35,6 +36,9 @@ export default function RecordingButton(props: ComponentProps) {
   const sessionId = useAtomValue(sessionIdAtom);
   const showJoyride = useAtomValue(showJoyRideAtom);
   const [{ isRecording, status }, setRecordingState] = useAtom(recorderAtom);
+  const [conversationHistory, setConversationHistory] = useAtom(
+    conversationHistoryAtom,
+  );
   const [playingResponse, setPlayingResponse] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
@@ -60,9 +64,9 @@ export default function RecordingButton(props: ComponentProps) {
     setPlayingResponse(false);
     setLoading(false);
   };
-
   // send transcibed text to openai to generate response
   const handleChatCompletion = async (humanResponse: string) => {
+    console.log("conversation history", conversationHistory);
     const response = await fetch("/api/chatCompletion", {
       method: "POST",
       headers: {
@@ -70,7 +74,7 @@ export default function RecordingButton(props: ComponentProps) {
       },
       body: JSON.stringify({
         content: humanResponse,
-        sessionId,
+        conversationHistory,
         language,
       }),
     });
@@ -122,7 +126,10 @@ export default function RecordingButton(props: ComponentProps) {
   };
 
   // establish socket connection with elevenlabs
-  const establishSocketConnection = (body: ReadableStream<Uint8Array>) => {
+  const establishSocketConnection = (
+    body: ReadableStream<Uint8Array>,
+    humanResponse: string,
+  ) => {
     let modelId = "eleven_monolingual_v1";
     let voiceId = "7arsGG6R4puBzDqYy6xu";
 
@@ -189,6 +196,16 @@ export default function RecordingButton(props: ComponentProps) {
       //  store the response in local storage
       await storeResponse(language, aiResponse);
 
+      await storeConversation(humanResponse, aiResponse);
+
+      setConversationHistory((prev) => {
+        return [
+          ...prev,
+          { role: "user", content: humanResponse },
+          { role: "assistant", content: aiResponse },
+        ];
+      });
+
       // 4. Send the EOS message with an empty string
       const eosMessage = {
         text: "",
@@ -253,8 +270,6 @@ export default function RecordingButton(props: ComponentProps) {
         }
       };
     });
-
-    return aiResponse;
   };
 
   // load polyfill for safari and iOS devices
@@ -315,21 +330,19 @@ export default function RecordingButton(props: ComponentProps) {
         socket.emit("send_audio", event.data);
       };
 
-      socket.on("transcription", async (data) => {
-        console.log("transcription", data);
+      socket.on("transcription", async (humanResponse) => {
+        console.log("transcription", humanResponse);
         try {
           startLoading();
           // generate response
-          const body = await handleChatCompletion(data);
+          const body = await handleChatCompletion(humanResponse);
 
           if (!body) {
             return;
           }
 
           // establish socket connection
-          const aiResponse = establishSocketConnection(body);
-
-          await storeConversation(data, aiResponse);
+          establishSocketConnection(body, humanResponse);
         } catch (error: any) {
           console.error(error);
           stopLoading();

@@ -2,6 +2,7 @@
 
 import {
   aiTextResponseAtom,
+  conversationHistoryAtom,
   isReturningUserAtom,
   sessionIdAtom,
   showAiResponseJoyRideAtom,
@@ -22,6 +23,7 @@ import { del, get, getMany, set, setMany } from "idb-keyval";
 import { useAtom, useSetAtom } from "jotai";
 import { Loader2 } from "lucide-react";
 import { nanoid } from "nanoid";
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 
@@ -31,6 +33,7 @@ export default function Home() {
   const [showJoyride, setShowJoyride] = useAtom(showJoyRideAtom);
   const setShowAiResponseJoyRide = useSetAtom(showAiResponseJoyRideAtom);
   const [isReturningUser, setIsReturningUser] = useAtom(isReturningUserAtom);
+  const setConversationHistory = useSetAtom(conversationHistoryAtom);
 
   const isNewUser = !isReturningUser && !showJoyride;
 
@@ -163,8 +166,31 @@ export default function Home() {
         await createSession();
         return;
       }
+      const conversationHistoryRequest = await fetch(
+        "/api/getConversationHistory",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sessionId: id,
+          }),
+        },
+      );
+
+      if (!conversationHistoryRequest.ok) {
+        console.error("Error getting conversation history");
+      }
+
+      const {
+        conversationHistory,
+      }: { conversationHistory: ChatCompletionMessageParam[] } =
+        await conversationHistoryRequest.json();
+      console.log("conversation length => ", conversationHistory.length);
+      setConversationHistory(conversationHistory);
       // if session id is present and not expired, use the session id
-      setSessionId(`${id}-${previousUsedLanguage}`);
+      setSessionId(id);
     };
     retrieveSession();
   }, []);
@@ -179,7 +205,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           content: "Greet yourself with your name!",
-          sessionId: currentSessionId,
+          conversationHistory: [],
           language,
         }),
       });
@@ -226,6 +252,16 @@ export default function Home() {
             },
           ],
         }),
+      });
+
+      setConversationHistory((prev) => {
+        return [
+          ...prev,
+          {
+            role: "assistant",
+            content: text,
+          },
+        ];
       });
 
       if (!res.ok) {

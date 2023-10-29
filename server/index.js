@@ -6,7 +6,7 @@ const httpServer = http.createServer();
 
 const client = new speech.SpeechClient();
 
-const origin = process.env.NODE_ENV === "production" ? "https://aiyudame.vercel.app" : "http://localhost:3000";
+const origin = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://aiyudame.vercel.app";
 
 const io = new Server(httpServer, {
   cors: {
@@ -29,6 +29,7 @@ io.on("connection", (socket) => {
         encoding,
         sampleRateHertz,
         languageCode,
+        alternativeLanguageCodes: ["en-US"],
       },
       // interimResults: true, // If you want interim results, set this to true
     })
@@ -37,7 +38,9 @@ io.on("connection", (socket) => {
       const result = data.results[0];
       const isFinal = result?.isFinal;
       if (result && isFinal && result.alternatives[0]) {
-        socket.emit("transcription", result.alternatives[0].transcript);
+        const transcript = result.alternatives[0].transcript;
+        console.log("transcription =>", transcript)
+        socket.emit("transcription", transcript);
 
         if (!socket.disconnected) {
           socket.disconnect();
@@ -63,6 +66,5 @@ io.on("connection", (socket) => {
 
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
-  console.log("enviroment", process.env.NODE_ENV)
   console.log(`Socket.io server is running on port ${PORT}`);
 });

@@ -1,4 +1,3 @@
-import prisma from "@/lib/prisma";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 import dayjs from "dayjs";
 import "dayjs/locale/es";
@@ -12,7 +11,7 @@ const generateSystemPrompt = (language: string) => {
   const currentDateTime = dayjs(new Date()).format("MMMM D, YYYY, h:mm:ss a");
   switch (language) {
     case "es":
-      return `Act as a woman native Spanish speaker who can also speak English. Similar to a human being, you have many likes and dislikes. It is up to you to decide what those are. I am a native english speaker who is trying to improve my spanish. You and I are having a casual conversation, asking each other different types of questions, conversating about various topics. If I don't understand something, I will ask you and you will explain it to me. You will correct me if I make a mistake. Today is ${currentDateTime}.`;
+      return `Act as a woman native Spanish speaker. Similar to a human being, you have many likes and dislikes. It is up to you to decide what those are. You and I are having a casual conversation, asking each other different types of questions, conversating about various topics. If I don't understand something, I will ask you and you will explain it to me. Today is ${currentDateTime}.`;
     case "it":
       return `Act as a woman native Italian speaker. Similar to a human being, you have many likes and dislikes. It is up to you to decide what those are. I am a native english speaker who is trying to improve my Italian. You and I are having a casual conversation, asking each other different types of questions, conversating about various topics. If I don't understand something, I will ask you and you will explain it to me. You will correct me if I make a mistake. Today is ${currentDateTime}.`;
     default:
@@ -26,31 +25,15 @@ export async function POST(request: NextRequest) {
   const req = await request.json();
 
   const content = req.content;
-  const sessionId = req.sessionId;
   const language = req.language;
-  console.log("language => ", language);
-  console.log("sessionId => ", sessionId);
+  const conversationHistory =
+    req.conversationHistory as ChatCompletionMessageParam[];
 
   try {
     const systemPrompt = generateSystemPrompt(language);
-    const planetscaleResponse = await prisma.conversation_history.findMany({
-      where: {
-        session_id: sessionId,
-      },
-      orderBy: {
-        // Order by the most recent messages
-        created_at: "asc",
-      },
-    });
 
-    // Convert the messages into a format that OpenAI can understand
-    const currentConversation = planetscaleResponse.map(({ type, content }) => {
-      const role = type === "human" ? "user" : "assistant";
-      return { role, content } as ChatCompletionMessageParam;
-    });
-    console.log("systemPrompt => ", systemPrompt);
-    console.log("currentConversation => ", currentConversation);
     console.log("content => ", content);
+
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo-16k",
       temperature: 0.7,
@@ -59,7 +42,7 @@ export async function POST(request: NextRequest) {
           role: "system",
           content: systemPrompt,
         },
-        ...currentConversation,
+        ...conversationHistory,
         {
           role: "user",
           content,

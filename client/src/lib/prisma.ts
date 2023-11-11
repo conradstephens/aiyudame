@@ -1,14 +1,28 @@
+import { connect } from "@planetscale/database";
+import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 import { PrismaClient } from "@prisma/client";
+import { fetch as undiciFetch } from "undici";
 
-// PrismaClient is attached to the `global` object in development to prevent
-// exhausting your database connection limit.
-//
-// Learn more:
-// https://pris.ly/d/help/next-js-best-practices
+// Initialize Prisma Client with the PlanetScale serverless database driver
+const connection = connect({
+  url: process.env.DATABASE_URL,
+  fetch: undiciFetch,
+});
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const adapter = new PrismaPlanetScale(connection);
 
-export const prisma = globalForPrisma.prisma || new PrismaClient();
+const prismaClientSingleton = () => {
+  // pass in adapter to the prisma client
+  return new PrismaClient({ adapter });
+};
+
+type prismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: prismaClientSingleton | undefined;
+};
+
+const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 

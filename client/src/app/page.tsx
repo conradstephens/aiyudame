@@ -13,11 +13,13 @@ import AiResponseWord from "@/components/ai-response-word";
 import GuidedTour from "@/components/guided-tour";
 import LanguageSelect from "@/components/language-select";
 import RecordingButton from "@/components/recording-button";
+import RolePlaySelect from "@/components/scenario-select";
 import ThemeToggle from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { storeResponse } from "@/constants/language";
+import { scenarioPrompts } from "@/constants/prompts";
 import clsx from "clsx";
 import { del, get, getMany, set, setMany } from "idb-keyval";
 import { useAtom, useSetAtom } from "jotai";
@@ -29,7 +31,8 @@ import { FormProvider, useForm } from "react-hook-form";
 
 export default function Home() {
   const [sessionId, setSessionId] = useAtom(sessionIdAtom);
-  const [{ text, words }, setResponse] = useAtom(aiTextResponseAtom);
+  const [{ text: aiResponseText, words: aiResponseWords }, setResponse] =
+    useAtom(aiTextResponseAtom);
   const [showJoyride, setShowJoyride] = useAtom(showJoyRideAtom);
   const setShowAiResponseJoyRide = useSetAtom(showAiResponseJoyRideAtom);
   const [isReturningUser, setIsReturningUser] = useAtom(isReturningUserAtom);
@@ -40,10 +43,12 @@ export default function Home() {
   const methods = useForm({
     defaultValues: {
       language: "es",
+      scenario: "freetalk",
     },
   });
 
   const language = methods.watch("language");
+  const scenario = methods.watch("scenario");
   const handleLanguageUpdate = async () => {
     // get the first 21 out of 24 characters of the session id
     // always adding a "-" and the language code to the end of the session id
@@ -118,7 +123,9 @@ export default function Home() {
         hasFinishedAiResponseJoyride,
       ] = store;
       const previousUsedLanguage = settings?.language ?? "es";
+      const previousUsedScenario = settings?.scenario ?? "freetalk";
       methods.setValue("language", previousUsedLanguage);
+      methods.setValue("scenario", previousUsedScenario);
       // restore the last thing the ai said
       switch (previousUsedLanguage) {
         case "it":
@@ -198,6 +205,7 @@ export default function Home() {
   // function for ai to greet the user
   const handleAiGreetings = async (currentSessionId: string) => {
     try {
+      const prompt = scenarioPrompts[scenario];
       const opeanAiChatRes = await fetch("/api/chatCompletion", {
         method: "POST",
         headers: {
@@ -207,6 +215,7 @@ export default function Home() {
           content: "Greet yourself with your name!",
           conversationHistory: [],
           language,
+          prompt,
         }),
       });
 
@@ -276,10 +285,17 @@ export default function Home() {
 
   // if the user is returning, and there is no text, then we need to generate an intro
   useEffect(() => {
-    if (isReturningUser && sessionId && !text) {
+    if (isReturningUser && sessionId && !aiResponseText) {
       handleAiGreetings(sessionId);
     }
   }, [sessionId, isReturningUser]);
+
+  useEffect(() => {
+    if (isReturningUser && sessionId && aiResponseText) {
+      setResponse({ text: "", words: [] });
+      handleAiGreetings(sessionId);
+    }
+  }, [scenario]);
 
   const handleShowJoyride = () => {
     setShowJoyride(true);
@@ -310,14 +326,17 @@ export default function Home() {
       <div className="flex flex-col p-5 sm:max-w-7xl w-full">
         <div
           className={clsx(
-            "flex justify-between flex-row",
+            "flex justify-between flex-row items-center",
             isNewUser && "flex-row-reverse",
           )}
         >
           {(isReturningUser || showJoyride) && (
-            <FormProvider {...methods}>
-              <LanguageSelect />
-            </FormProvider>
+            <div className="flex gap-2">
+              <FormProvider {...methods}>
+                <LanguageSelect />
+                <RolePlaySelect />
+              </FormProvider>
+            </div>
           )}
           <ThemeToggle />
         </div>
@@ -344,12 +363,12 @@ export default function Home() {
           <>
             <div className="w-full flex flex-col justify-center items-center h-full gap-16">
               <ScrollArea className="h-72 md:h-96">
-                {words.length > 0 ? (
-                  words.map((word, index) => (
+                {aiResponseWords.length > 0 ? (
+                  aiResponseWords.map((word, index) => (
                     <span key={index} className={`word-${index}`}>
                       <AiResponseWord
                         word={word}
-                        context={text}
+                        context={aiResponseText}
                         language={language}
                       />
                     </span>
@@ -364,7 +383,7 @@ export default function Home() {
               <RecordingButton language={language} />
             </div>
             {!isReturningUser && <GuidedTour />}
-            {!!words.length && <AiResponseGuidedTour />}
+            {!!aiResponseWords.length && <AiResponseGuidedTour />}
           </>
         )}
       </div>

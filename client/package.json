@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "NODE_ENV=production node server/index.js",
-    "node": "NODE_ENV=development node server/index.js",
+    "start": "next start",
     "lint": "next lint",
     "format": "npx prettier . --write",
     "postinstall": "prisma generate",

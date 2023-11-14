@@ -6,7 +6,7 @@ import ScenarioSelect from "@/components/scenario-select";
 import ThemeToggle from "@/components/theme-toggle";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
-import { FormProvider, UseFormReturn } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 
 interface ComponentProps {
   methods: UseFormReturn<
@@ -35,10 +35,8 @@ export default function Toolbar(props: ComponentProps) {
     >
       {(isReturningUser || showJoyride) && (
         <div className="flex gap-2">
-          <FormProvider {...methods}>
-            <LanguageSelect />
-            <ScenarioSelect />
-          </FormProvider>
+          <LanguageSelect methods={methods} />
+          <ScenarioSelect methods={methods} />
         </div>
       )}
       <ThemeToggle />

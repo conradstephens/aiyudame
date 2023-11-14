@@ -14,10 +14,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { set } from "idb-keyval";
-import { useFormContext } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 
-export default function LanguageSelect() {
-  const methods = useFormContext();
+interface ComponentProps {
+  methods: UseFormReturn<
+    {
+      language: string;
+      scenario: string;
+    },
+    any,
+    undefined
+  >;
+}
+
+export default function LanguageSelect(props: ComponentProps) {
+  const { methods } = props;
 
   return (
     <Form {...methods}>

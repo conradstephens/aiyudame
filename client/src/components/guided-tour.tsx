@@ -1,10 +1,10 @@
 import { isReturningUserAtom, showJoyRideAtom } from "@/atoms";
+import Tooltip from "@/components/guided-tour-tooltip";
+import { darkStyles, lightStyles } from "@/constants/guided-tour";
 import { set } from "idb-keyval";
 import { useAtom, useSetAtom } from "jotai";
 import { useTheme } from "next-themes";
 import Joyride, { CallBackProps, Step } from "react-joyride";
-import Tooltip from "@/components/guided-tour-tooltip";
-import { darkStyles, lightStyles } from "@/constants/guided-tour";
 
 export default function GuidedTour() {
   const [run, setRun] = useAtom(showJoyRideAtom);
@@ -33,10 +33,16 @@ export default function GuidedTour() {
       disableBeacon: true,
       showSkipButton: false,
     },
+    // {
+    //   target: ".language-select",
+    //   content:
+    //     "Selecting English will allow the AI to act as a regular chat bot. ",
+    //   disableBeacon: true,
+    //   showSkipButton: false,
+    // },
     {
-      target: ".language-select",
-      content:
-        "Selecting English will allow the AI to act as a regular chat bot. ",
+      target: ".scenario-select",
+      content: "Select the scenario you want the AI to act in.",
       disableBeacon: true,
       showSkipButton: false,
     },
@@ -62,7 +68,7 @@ export default function GuidedTour() {
     {
       target: ".recording-button",
       content:
-        "Talk to the AI as if you were talking to a friend. Be creative! Ask it questions, tell it a story, or just say hello.\n\n Have fun! 😃",
+        "Be creative when talking to the AI! Ask it questions, tell it a story, or just say hello.\n\n Have fun! 😃",
       disableBeacon: true,
       showSkipButton: false,
     },

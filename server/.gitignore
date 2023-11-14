@@ -170,6 +170,8 @@ dist
 # IntelliJ based IDEs
 .idea
 
+## Terraform .gitignore
+
 # Local .terraform directories
 **/.terraform/*
 

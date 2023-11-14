@@ -19,6 +19,7 @@ import { io } from "socket.io-client";
 
 interface ComponentProps {
   language: string;
+  prompt: string;
 }
 
 function round(value: number, precision: number) {
@@ -29,7 +30,7 @@ function round(value: number, precision: number) {
 const webSocketUri = process.env.NEXT_PUBLIC_WEB_SOCKET_URI as string;
 
 export default function RecordingButton(props: ComponentProps) {
-  const { language } = props;
+  const { language, prompt } = props;
   const sessionId = useAtomValue(sessionIdAtom);
   const showJoyride = useAtomValue(showJoyRideAtom);
   const [{ isRecording, status }, setRecordingState] = useAtom(recorderAtom);
@@ -73,6 +74,7 @@ export default function RecordingButton(props: ComponentProps) {
         content: humanResponse,
         conversationHistory,
         language,
+        prompt,
       }),
     });
 
@@ -85,42 +87,42 @@ export default function RecordingButton(props: ComponentProps) {
   };
 
   // store the conversation in the db
-  const storeConversation = async (
-    humanResponse: string,
-    aiResponse: string,
-  ) => {
-    try {
-      // save the chats to db
-      const res = await fetch("/api/storeNewChats", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          data: [
-            {
-              session_id: sessionId,
-              type: "human",
-              content: humanResponse,
-            },
-            {
-              session_id: sessionId,
-              type: "ai",
-              content: aiResponse,
-            },
-          ],
-        }),
-      });
+  // const storeConversation = async (
+  //   humanResponse: string,
+  //   aiResponse: string,
+  // ) => {
+  //   try {
+  //     // save the chats to db
+  //     const res = await fetch("/api/storeNewChats", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         data: [
+  //           {
+  //             session_id: sessionId,
+  //             type: "human",
+  //             content: humanResponse,
+  //           },
+  //           {
+  //             session_id: sessionId,
+  //             type: "ai",
+  //             content: aiResponse,
+  //           },
+  //         ],
+  //       }),
+  //     });
 
-      if (!res.ok) {
-        console.error("Error storing chats");
-        const data = await res.json();
-        console.error(data);
-      }
-    } catch (e) {
-      console.error("Error storing conversation", e);
-    }
-  };
+  //     if (!res.ok) {
+  //       console.error("Error storing chats");
+  //       const data = await res.json();
+  //       console.error(data);
+  //     }
+  //   } catch (e) {
+  //     console.error("Error storing conversation", e);
+  //   }
+  // };
 
   // establish socket connection with elevenlabs
   const establishSocketConnection = (
@@ -193,7 +195,7 @@ export default function RecordingButton(props: ComponentProps) {
       //  store the response in local storage
       await storeResponse(language, aiResponse);
 
-      await storeConversation(humanResponse, aiResponse);
+      // await storeConversation(humanResponse, aiResponse);
 
       setConversationHistory((prev) => {
         return [

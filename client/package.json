@@ -3,10 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "next build",
-    "start": "NODE_ENV=production node server/index.js",
-    "node": "NODE_ENV=development node server/index.js",
+    "start": "next start",
     "lint": "next lint",
     "format": "npx prettier . --write",
     "postinstall": "prisma generate",
@@ -16,7 +15,8 @@
   "dependencies": {
     "@hookform/resolvers": "^3.3.1",
     "@planetscale/database": "^1.11.0",
-    "@prisma/client": "^5.2.0",
+    "@prisma/adapter-planetscale": "^5.5.2",
+    "@prisma/client": "^5.5.2",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.5",
     "@radix-ui/react-label": "^2.0.2",
@@ -49,6 +49,7 @@
     "socket.io-client": "^4.7.2",
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7",
+    "undici": "^5.27.2",
     "zod": "^3.22.2"
   },
   "devDependencies": {

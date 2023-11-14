@@ -105,6 +105,29 @@ yarn dev
 - **PLANETSCALE:** Follow this [guide](https://planetscale.com/docs/concepts/connection-strings) to obtain your planetscale keys.
 - **CRON_SECRET:** Generate a secret to authenticate requests to your cron job api route.
 
+## Deploying the Server ✈️
+
+- Local container
+
+```shell
+docker build -t aiyudame .
+docker run -p 3000:3000 aiyudame
+```
+
+- Development container
+
+```shell
+gcloud builds submit --tag gcr.io/aiyudame/server/dev --project aiyudame
+gcloud run deploy aiyudame-server-dev --image gcr.io/aiyudame/server/dev --project aiyudame --platform managed --region us-central1
+```
+
+- Production container
+
+```shell
+gcloud builds submit --tag gcr.io/aiyudame/server/prod --project aiyudame
+gcloud run deploy aiyudame-server --image gcr.io/aiyudame/server/prod --project aiyudame --platform managed --min-instances 1  --region us-central1
+```
+
 ## Deployment 😎
 
 - If deploying to vercel, see this [guide](https://planetscale.com/docs/tutorials/deploy-to-vercel)

@@ -2,7 +2,7 @@
 
 import { isReturningUserAtom, showJoyRideAtom } from "@/atoms";
 import LanguageSelect from "@/components/language-select";
-import RolePlaySelect from "@/components/scenario-select";
+import ScenarioSelect from "@/components/scenario-select";
 import ThemeToggle from "@/components/theme-toggle";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
@@ -37,7 +37,7 @@ export default function Toolbar(props: ComponentProps) {
         <div className="flex gap-2">
           <FormProvider {...methods}>
             <LanguageSelect />
-            <RolePlaySelect />
+            <ScenarioSelect />
           </FormProvider>
         </div>
       )}

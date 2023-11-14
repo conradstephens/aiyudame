@@ -33,8 +33,7 @@ export const roles = [
   },
 ];
 
-const promptPrefix =
-  "Act as a male or female native Spanish speaker. You must choose one gender.";
+const promptPrefix = "Act as a female native Spanish speaker.";
 
 export const scenarioPrompts: { [scenario: string]: string } = {
   airport: `${promptPrefix} You are an airline employee at an airport. I am a traveler that is talking to you. I am checking my bags and going through security. Your first question is, "Where are you flying to?. Keep your responses under 100 words."`,

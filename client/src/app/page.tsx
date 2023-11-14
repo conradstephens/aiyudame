@@ -17,7 +17,6 @@ import { del, get, getMany, set } from "idb-keyval";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Loader2 } from "lucide-react";
 import { nanoid } from "nanoid";
-import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
@@ -165,29 +164,29 @@ export default function Home() {
         await createSession();
         return;
       }
-      const conversationHistoryRequest = await fetch(
-        "/api/getConversationHistory",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            sessionId: id,
-          }),
-        },
-      );
+      // const conversationHistoryRequest = await fetch(
+      //   "/api/getConversationHistory",
+      //   {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({
+      //       sessionId: id,
+      //     }),
+      //   },
+      // );
 
-      if (!conversationHistoryRequest.ok) {
-        console.error("Error getting conversation history");
-      }
+      // if (!conversationHistoryRequest.ok) {
+      //   console.error("Error getting conversation history");
+      // }
 
-      const {
-        conversationHistory,
-      }: { conversationHistory: ChatCompletionMessageParam[] } =
-        await conversationHistoryRequest.json();
-      console.log("conversation length => ", conversationHistory.length);
-      setConversationHistory(conversationHistory);
+      // const {
+      //   conversationHistory,
+      // }: { conversationHistory: ChatCompletionMessageParam[] } =
+      //   await conversationHistoryRequest.json();
+      // console.log("conversation length => ", conversationHistory.length);
+      // setConversationHistory(conversationHistory);
       // if session id is present and not expired, use the session id
       setSessionId(id);
     };
@@ -307,7 +306,7 @@ export default function Home() {
           <Welcome />
         ) : (
           // show the home screen
-          <HomeScreen language={language} />
+          <HomeScreen language={language} scenario={scenario} />
         )}
       </div>
     </div>

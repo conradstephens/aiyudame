@@ -81,7 +81,7 @@ export default function AiResponseWord(props: ComponentProps) {
       <PopoverTrigger
         disabled={!isNotEnglish}
         className={clsx(
-          "text-zinc-900 dark:text-zinc-50 p-1 text-xl inline-block",
+          "text-zinc-900 dark:text-zinc-50 p-1 text-lg inline-block",
           isNotEnglish && "underline-offset-4 hover:underline",
         )}
         onClick={getExplanation}

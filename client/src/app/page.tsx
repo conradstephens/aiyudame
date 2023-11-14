@@ -70,6 +70,7 @@ export default function Home() {
         setResponse({ text, words });
       } else {
         setResponse({ text: "", words: [] });
+        setConversationHistory([]);
         handleAiGreetings(updatedSessionId);
       }
     }

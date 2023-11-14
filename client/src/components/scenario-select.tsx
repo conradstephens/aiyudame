@@ -16,10 +16,21 @@ import {
 } from "@/components/ui/select";
 import { roles } from "@/constants/prompts";
 import { set } from "idb-keyval";
-import { useFormContext } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 
-export default function ScenarioSelect() {
-  const methods = useFormContext();
+interface ComponentProps {
+  methods: UseFormReturn<
+    {
+      language: string;
+      scenario: string;
+    },
+    any,
+    undefined
+  >;
+}
+
+export default function ScenarioSelect(props: ComponentProps) {
+  const { methods } = props;
 
   return (
     <Form {...methods}>

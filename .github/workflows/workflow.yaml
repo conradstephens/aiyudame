@@ -42,32 +42,27 @@ jobs:
             echo terraform plan -target=google_cloud_run_v2_service.aiyudame-server-dev -input=false
           elif [ ${{ github.ref }} == 'refs/heads/main' && ${{ github.event_name }} == 'push' ]; then
             echo terraform plan -target=google_cloud_run_v2_service.aiyudame-server-prod -input=false
+          fi
         env:
           TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
 
-      # # Generates an execution plan for Terraform
-      # - name: Terraform Plan Dev
+      # - name: Terraform Apply Dev
       #   if: github.ref != 'refs/heads/main'
-      #   run: terraform plan -target=google_cloud_run_v2_service.aiyudame-server-dev -input=false
+      #   run: terraform apply -target=google_cloud_run_v2_service.aiyudame-server-dev -auto-approve -input=false
       #   env:
       #     TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-
-      # - name: Terraform Plan Prod
-      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      #   run: terraform plan -target=google_cloud_run_v2_service.aiyudame-server-prod -input=false
-      #   env:
-      #     TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-
-      - name: Terraform Apply Dev
-        if: github.ref != 'refs/heads/main'
-        run: terraform apply -target=google_cloud_run_v2_service.aiyudame-server-dev -auto-approve -input=false
-        env:
-          TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
-
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-      - name: Terraform Apply Prod
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -target=google_cloud_run_v2_service.aiyudame-server-prod -auto-approve -input=false
+      - name: Terraform Apply
+        run: |
+          if [ ${{ github.ref }} != 'refs/heads/main' ]; then
+            echo terraform apply -target=google_cloud_run_v2_service.aiyudame-server-dev -auto-approve -input=false
+          elif [ ${{ github.ref }} == 'refs/heads/main' && ${{ github.event_name }} == 'push' ]; then
+            echo terraform apply -target=google_cloud_run_v2_service.aiyudame-server-prod -auto-approve -input=false
+          fi
         env:
           TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        # run: terraform apply -target=google_cloud_run_v2_service.aiyudame-server-prod -auto-approve -input=false
+        # env:
+        #   TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}

@@ -39,9 +39,9 @@ jobs:
       - name: Terraform Plan
         run: |
           if [ ${{ github.ref }} != 'refs/heads/main' ]; then
-            terraform plan -target=google_cloud_run_v2_service.aiyudame-server-dev -input=false
+            echo terraform plan -target=google_cloud_run_v2_service.aiyudame-server-dev -input=false
           elif [ ${{ github.ref }} == 'refs/heads/main' && ${{ github.event_name }} == 'push' ]; then
-            terraform plan -target=google_cloud_run_v2_service.aiyudame-server-prod -input=false
+            echo terraform plan -target=google_cloud_run_v2_service.aiyudame-server-prod -input=false
         env:
           TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
 

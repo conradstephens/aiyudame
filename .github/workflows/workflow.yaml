@@ -37,14 +37,37 @@ jobs:
 
       # Generates an execution plan for Terraform
       - name: Terraform Plan
-        run: terraform plan -input=false
+        run: |
+          if [ ${{ github.ref }} != 'refs/heads/main' ]; then
+            terraform plan -target=google_cloud_run_v2_service.aiyudame-server-dev -input=false
+          elif [ ${{ github.ref }} == 'refs/heads/main' && ${{ github.event_name }} == 'push' ]; then
+            terraform plan -target=google_cloud_run_v2_service.aiyudame-server-prod -input=false
+        env:
+          TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      # # Generates an execution plan for Terraform
+      # - name: Terraform Plan Dev
+      #   if: github.ref != 'refs/heads/main'
+      #   run: terraform plan -target=google_cloud_run_v2_service.aiyudame-server-dev -input=false
+      #   env:
+      #     TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      # - name: Terraform Plan Prod
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      #   run: terraform plan -target=google_cloud_run_v2_service.aiyudame-server-prod -input=false
+      #   env:
+      #     TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Terraform Apply Dev
+        if: github.ref != 'refs/heads/main'
+        run: terraform apply -target=google_cloud_run_v2_service.aiyudame-server-dev -auto-approve -input=false
         env:
           TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
 
       # On push to "main", build or change infrastructure according to Terraform configuration files
       # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
-      - name: Terraform Apply
+      - name: Terraform Apply Prod
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve -input=false
+        run: terraform apply -target=google_cloud_run_v2_service.aiyudame-server-prod -auto-approve -input=false
         env:
           TF_VAR_GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}

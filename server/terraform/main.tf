@@ -1,6 +1,13 @@
+variable "GOOGLE_CREDENTIALS" {
+  type        = string
+  sensitive   = true
+  description = "Google Cloud service account credentials"
+}
+
 provider "google" {
-  project = "aiyudame"
-  region  = "us-central1"
+  project     = "aiyudame"
+  credentials = var.GOOGLE_CREDENTIALS
+  region      = "us-central1"
 }
 
 resource "google_cloud_run_v2_service" "aiyudame-server-prod" {
